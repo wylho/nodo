@@ -144,7 +144,7 @@ mesmo núcleo do aplicativo. Começou inspirado no [Minder](https://github.com/p
   mesmo efeito. Motivo: um laço assim (`colors`) fazia centenas de redesenhos por tecla e deixava a edição travando.
 
 ## Estado atual
-- **Versão 0.6.2** (25/10/2026, pedido do usuário: "lança a versão"): o + das abas abre a tela inicial numa aba em
+- **Versão 0.6.2 lançada** (25/10/2026, Release `v0.6.2`, pedido do usuário: "lança a versão"): o + das abas abre a tela inicial numa aba em
   branco em vez de criar um mapa.
 - **Versão 0.6.1 lançada** (24/10/2026, Release `v0.6.1`, pedido do usuário: "mandar brasa e fazer o release"): `.nodo` em "Abrir com" (Linux e
   macOS) e um Nodo só, botão de recolher claro em todas as estruturas e a nota solta fora de cima dos tópicos.
