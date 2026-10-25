@@ -709,6 +709,40 @@ describe('abas', () => {
     expect(doc.tabs.filter((t) => t.path === '/mapas/viagem.nodo')).toHaveLength(1)
     expect(doc.tabs.find((t) => t.id === doc.snapshot.active)?.path).toBe('/mapas/viagem.nodo')
   })
+  it('o + abre a tela inicial numa aba em branco; o mapa novo ou aberto ocupa o lugar dela', async () => {
+    const { seedDemo } = await import('../src/lib/preview')
+    const { doc } = await import('../src/lib/document.svelte')
+    seedDemo()
+    await doc.load()
+    const first = doc.snapshot.active!
+    const demo = doc.snapshot.title
+    await doc.newTab()
+    expect(doc.tabs).toHaveLength(2)
+    expect(doc.hasDocument).toBe(false)
+    const blank = doc.snapshot.active!
+    expect(doc.tabs.find((t) => t.id === blank)?.blank).toBe(true)
+    expect(doc.tabName(doc.tabs.find((t) => t.id === blank)!)).toBe('Nova aba')
+
+    // Voltar ao mapa e de novo ao +: a mesma aba em branco, sem outra.
+    await doc.switchTab(first)
+    expect(doc.snapshot.title).toBe(demo)
+    await doc.newTab()
+    expect(doc.snapshot.active).toBe(blank)
+    expect(doc.tabs).toHaveLength(2)
+
+    await doc.newMap()
+    expect(doc.tabs).toHaveLength(2)
+    expect(doc.snapshot.active).toBe(blank)
+    expect(doc.snapshot.title).toBe('Tópico central')
+    expect(doc.tabs.some((t) => t.blank)).toBe(false)
+
+    await doc.newTab()
+    await doc.openPath('/mapas/viagem.nodo')
+    expect(doc.tabs).toHaveLength(3)
+    expect(doc.tabs.find((t) => t.id === doc.snapshot.active)?.path).toBe('/mapas/viagem.nodo')
+    await doc.switchTab(first)
+    expect(doc.snapshot.title).toBe(demo)
+  })
 })
 
 describe('exportação: o card lido da tela', () => {

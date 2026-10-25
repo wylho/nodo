@@ -72,7 +72,9 @@ pub fn get_attachments(
 /// Where an attachment's bytes are, in any open map (its card can be in a tab behind).
 fn source(state: &AppState, hash: &str) -> Option<Data> {
     let doc = lock(state).ok()?;
-    let found = doc.iter().find_map(|t| t.editor.attachments().source(hash));
+    let found = doc
+        .iter()
+        .find_map(|t| t.editor.as_ref()?.attachments().source(hash));
     found
 }
 
@@ -99,7 +101,9 @@ pub fn serve(app: &tauri::AppHandle, req: &Request<Vec<u8>>) -> Response<Vec<u8>
     // `?thumb`: the thumbnail of a photo (WebP), as in the Ideario; a photo without one gets the photo itself.
     if wants_thumb(req.uri().query()) {
         let thumb = lock(&state).ok().and_then(|doc| {
-            let found = doc.iter().find_map(|t| t.editor.attachments().thumb(&hash));
+            let found = doc
+                .iter()
+                .find_map(|t| t.editor.as_ref()?.attachments().thumb(&hash));
             found
         });
         match thumb.map(|d| d.read()) {
@@ -115,8 +119,8 @@ pub fn serve(app: &tauri::AppHandle, req: &Request<Vec<u8>>) -> Response<Vec<u8>
                 let is_image = lock(&state).ok().is_some_and(|doc| {
                     doc.iter().any(|t| {
                         t.editor
-                            .attachments()
-                            .get(&hash)
+                            .as_ref()
+                            .and_then(|e| e.attachments().get(&hash))
                             .is_some_and(|a| a.kind == "image")
                     })
                 });
@@ -136,9 +140,13 @@ pub fn serve(app: &tauri::AppHandle, req: &Request<Vec<u8>>) -> Response<Vec<u8>
         let Ok(doc) = lock(&state) else {
             return status_only(StatusCode::SERVICE_UNAVAILABLE);
         };
-        let found = doc
-            .iter()
-            .find_map(|t| t.editor.attachments().get(&hash).map(|a| a.mime.clone()));
+        let found = doc.iter().find_map(|t| {
+            t.editor
+                .as_ref()?
+                .attachments()
+                .get(&hash)
+                .map(|a| a.mime.clone())
+        });
         found
     };
     let bytes = match cached {

@@ -136,7 +136,7 @@ class Document {
     if (!hasHost) return
     const s = this.snapshot
     const name = s.path ? s.path.split(/[\\/]/).pop() : s.title || t('Sem título')
-    const title = s.active === null ? 'Nodo' : `${s.dirty ? '• ' : ''}${name} — Nodo`
+    const title = !this.hasDocument ? 'Nodo' : `${s.dirty ? '• ' : ''}${name} — Nodo`
     import('@tauri-apps/api/window')
       .then(({ getCurrentWindow }) => getCurrentWindow().setTitle(title))
       .catch(() => {})
@@ -240,7 +240,8 @@ class Document {
   }
 
   /** Nome que a aba mostra: o do arquivo, ou o do mapa enquanto não foi salvo. */
-  tabName(tab: { title: string; path: string | null }) {
+  tabName(tab: { title: string; path: string | null; blank?: boolean }) {
+    if (tab.blank) return t('Nova aba')
     return tab.path ? (tab.path.split(/[\\/]/).pop() ?? tab.path).replace(/\.nodo$/i, '') : tab.title || t('Sem título')
   }
 
@@ -301,7 +302,13 @@ class Document {
     if (back != null && this.snapshot.nodes.some((n) => n.id === back)) this.selected = back
   }
 
-  /** Novo mapa (⌘N), numa aba nova. */
+  /** Aba nova (⌘T e o + das abas): a tela inicial, de onde se cria ou abre um mapa. */
+  async newTab() {
+    await this.leaveTab()
+    await this.run(() => api.newTab())
+  }
+
+  /** Novo mapa (⌘N), numa aba nova (ou na aba em branco da frente). */
   async newMap() {
     await this.leaveTab()
     await this.create(t('Tópico central'))

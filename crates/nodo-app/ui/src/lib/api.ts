@@ -134,6 +134,8 @@ export interface TabInfo {
   title: string
   path: string | null
   dirty: boolean
+  /** Aba em branco (o + da barra de abas): a tela inicial, sem mapa. */
+  blank: boolean
 }
 
 /** Dimensões medidas no frontend para um nó. */
@@ -239,6 +241,9 @@ export const api = {
   open: (path: string) => call<Snapshot>('open_map', { path }),
 
   /** Traz uma aba para a frente. */
+  /** Uma aba em branco na frente, com a tela inicial (o + da barra de abas). */
+  newTab: () => call<Snapshot>('new_tab'),
+
   switchTab: (id: number) => call<Snapshot>('switch_tab', { id }),
 
   /** Fecha uma aba (a interface pergunta antes, se houver algo por salvar). */

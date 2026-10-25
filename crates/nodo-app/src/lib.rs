@@ -98,15 +98,25 @@ pub struct TabInfo {
     title: String,
     path: Option<String>,
     dirty: bool,
+    /// A blank tab (the + of the tab bar), showing the start screen.
+    blank: bool,
 }
 
 fn tab_infos(doc: &Doc) -> Vec<TabInfo> {
     doc.iter()
         .map(|t| TabInfo {
             id: t.id,
-            title: t.editor.map().root.text.clone(),
-            path: t.editor.path().map(|p| p.display().to_string()),
-            dirty: t.editor.is_dirty(),
+            title: t
+                .editor
+                .as_ref()
+                .map_or(String::new(), |e| e.map().root.text.clone()),
+            path: t
+                .editor
+                .as_ref()
+                .and_then(Editor::path)
+                .map(|p| p.display().to_string()),
+            dirty: t.editor.as_ref().is_some_and(Editor::is_dirty),
+            blank: t.editor.is_none(),
         })
         .collect()
 }
@@ -175,7 +185,8 @@ fn snapshot(doc: &Doc) -> Snapshot {
             spacing: None,
             bounds: Bounds::default(),
             tabs: tab_infos(doc),
-            active: None,
+            // A blank tab in front still has its id (the tab bar shows it as the one in front).
+            active: doc.active_id(),
         };
     };
     let map: &MindMap = ed.map();
@@ -318,6 +329,14 @@ fn get_snapshot(state: State<'_, AppState>) -> Result<Snapshot, String> {
 fn new_map(state: State<'_, AppState>, title: String) -> Result<Snapshot, String> {
     let mut doc = lock(&state)?;
     doc.add(Editor::new(&title));
+    Ok(snapshot(&doc))
+}
+
+/// A blank tab in front, with the start screen (the + of the tab bar).
+#[tauri::command]
+fn new_tab(state: State<'_, AppState>) -> Result<Snapshot, String> {
+    let mut doc = lock(&state)?;
+    doc.add_blank();
     Ok(snapshot(&doc))
 }
 
@@ -1064,6 +1083,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             get_snapshot,
             new_map,
+            new_tab,
             switch_tab,
             close_tab,
             open_map,

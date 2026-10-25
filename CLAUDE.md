@@ -427,6 +427,11 @@ mesmo núcleo do aplicativo. Começou inspirado no [Minder](https://github.com/p
   a nota que ficou em cima de um tópico vai para a direita do mapa, uma embaixo da outra; as que estavam livres não
   mudam; tudo no mesmo passo do desfazer. A interface manda a altura de verdade de cada nota no `set_sizes` (`notes`,
   `Editor::set_note_heights`). Espelho em `preview.ts` (`clearNotes`). Teste no `editor.rs` (todas as estruturas).
+- **O + das abas abre a tela inicial** (pedido do usuário: não criar um mapa sozinho): a aba em branco
+  (`tabs.rs`: `Tab::editor` é `Option`, `add_blank`; o mapa novo ou aberto ocupa a aba em branco da frente; uma só),
+  comando `new_tab`, `blank` no `TabInfo` e `active` também na aba em branco; interface `doc.newTab` (o + e ⌘T; ⌘N
+  continua criando o mapa), a aba mostra "Nova aba" e fica por cima da tela inicial (`.map-tabs.over`). Espelho em
+  `preview.ts`; testes em `tabs.rs` e `tests/lib.test.ts`.
 - **Próximo:** a exportação desenhar emoji e pílulas do card; anexos e gravações no tópico (precisam de um lugar
   para os arquivos ao lado do `.nodo`); o Ideario usar `CardPills`/`CardDialog` do Atrio no lugar das cópias dele;
   estruturas do XMind que faltam (chaves, linha do tempo, espinha de peixe, matriz, tabela em árvore); aba Estrutura

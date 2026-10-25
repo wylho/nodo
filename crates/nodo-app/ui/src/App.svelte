@@ -87,7 +87,7 @@
         e: () => e.shiftKey && (ui.exportOpen = true),
         o: () => doc.openDialog(),
         n: () => doc.newMap(),
-        t: () => doc.newMap(),
+        t: () => doc.newTab(),
         // ⌘Enter abre o card do tópico, para escrever com detalhes sem tirar a mão do teclado.
         enter: () => doc.selected !== null && notes.show(doc.selected, true),
         w: () => doc.closeTab(),

@@ -121,6 +121,8 @@ function restore(state: string) {
 
 interface PTab {
   id: number
+  /** Aba em branco (o + da barra de abas): mostra a tela inicial até um mapa novo ou aberto ocupar o lugar. */
+  blank?: boolean
   state: string
   past: string[]
   future: string[]
@@ -133,18 +135,41 @@ let nextTab = 1
 /** Guarda o mapa da frente na aba dele. */
 function saveActive() {
   const t = tabs.find((x) => x.id === activeTab)
-  if (t) Object.assign(t, { state: snapshotState(), past: [...past], future: [...future] })
+  if (t && !t.blank) Object.assign(t, { state: snapshotState(), past: [...past], future: [...future] })
+}
+
+/** Nenhum mapa carregado (tela inicial). */
+function clearMap() {
+  nodes.clear()
+  freeNotes = []
+  past.length = 0
+  future.length = 0
+  path = null
+  dirty = false
 }
 
 function activate(t: PTab) {
+  if (t.blank) {
+    clearMap()
+    activeTab = t.id
+    return
+  }
   restore(t.state)
   past.splice(0, past.length, ...t.past)
   future.splice(0, future.length, ...t.future)
   activeTab = t.id
 }
 
-/** Uma aba nova com o mapa que está carregado agora, na frente. */
+const activeBlank = () => tabs.some((x) => x.id === activeTab && x.blank)
+
+/** O mapa que está carregado agora vai para a aba em branco da frente, ou para uma aba nova. */
 function pushTab() {
+  const blank = tabs.find((x) => x.id === activeTab && x.blank)
+  if (blank) {
+    blank.blank = false
+    saveActive()
+    return
+  }
   const t: PTab = { id: nextTab++, state: '', past: [], future: [] }
   tabs.push(t)
   activeTab = t.id
@@ -156,10 +181,11 @@ const untouched = () => path === null && !dirty && past.length === 0
 
 function tabList(): TabInfo[] {
   return tabs.map((tab) => {
-    if (tab.id === activeTab) return { id: tab.id, title: nodes.get(rootId)?.text ?? t('Sem título'), path, dirty }
+    if (tab.blank) return { id: tab.id, title: '', path: null, dirty: false, blank: true }
+    if (tab.id === activeTab) return { id: tab.id, title: nodes.get(rootId)?.text ?? t('Sem título'), path, dirty, blank: false }
     const o = JSON.parse(tab.state) as { nodes: [number, PNode][]; rootId: number; dirty: boolean; path: string | null }
     const root = o.nodes.find(([id]) => id === o.rootId)?.[1]
-    return { id: tab.id, title: root?.text ?? t('Sem título'), path: o.path, dirty: o.dirty }
+    return { id: tab.id, title: root?.text ?? t('Sem título'), path: o.path, dirty: o.dirty, blank: false }
   })
 }
 
@@ -705,16 +731,28 @@ export const previewBackend = {
 
   open_map: ({ path: p }: { path: string }) => {
     saveActive()
-    const open = tabs.find((t) => (t.id === activeTab ? path : (JSON.parse(t.state) as { path: string | null }).path) === p)
+    const open = tabs.find((t) => !t.blank && (t.id === activeTab ? path : (JSON.parse(t.state) as { path: string | null }).path) === p)
     if (open) {
       activate(open)
       return snapshotOf()
     }
-    const reuse = activeTab !== null && untouched()
+    const reuse = activeTab !== null && !activeBlank() && untouched()
     fillDemo()
     path = p
     if (reuse) saveActive()
     else pushTab()
+    return snapshotOf()
+  },
+
+  new_tab: () => {
+    saveActive()
+    const blank = tabs.find((x) => x.blank)
+    if (blank) activate(blank)
+    else {
+      const tab: PTab = { id: nextTab++, blank: true, state: '', past: [], future: [] }
+      tabs.push(tab)
+      activate(tab)
+    }
     return snapshotOf()
   },
 
@@ -737,12 +775,7 @@ export const previewBackend = {
         if (next) activate(next)
         else {
           activeTab = null
-          nodes.clear()
-          freeNotes = []
-          past.length = 0
-          future.length = 0
-          path = null
-          dirty = false
+          clearMap()
         }
       }
     }

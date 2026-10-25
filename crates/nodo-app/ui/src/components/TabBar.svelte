@@ -1,7 +1,7 @@
 <script lang="ts">
   // Abas dos mapas abertos, no canto de cima do mapa (pedido do usuário: dentro da área do mapa, sem mexer na barra
   // de cima). Mesmo desenho flutuante da barra de zoom. Clique troca; × ou o botão do meio fecha (pergunta se há algo
-  // por salvar); + abre um mapa novo.
+  // por salvar); + abre uma aba em branco com a tela inicial (Novo mapa, Abrir e os recentes).
   import { Plus, X } from '@lucide/svelte'
   import { t as tr } from '@wylho/atrio'
   import { doc } from '../lib/document.svelte'
@@ -10,7 +10,8 @@
 </script>
 
 {#if doc.tabs.length}
-  <div class="map-tabs" role="tablist" tabindex="-1" aria-label={tr('Mapas abertos')} onpointerdown={(e) => e.stopPropagation()} ondblclick={(e) => e.stopPropagation()}>
+  <!-- Na aba em branco a tela inicial cobre o mapa, e as abas ficam por cima dela (`over`). -->
+  <div class="map-tabs" class:over={!doc.hasDocument} role="tablist" tabindex="-1" aria-label={tr('Mapas abertos')} onpointerdown={(e) => e.stopPropagation()} ondblclick={(e) => e.stopPropagation()}>
     {#each doc.tabs as t (t.id)}
       {@const on = t.id === doc.snapshot.active}
       {@const name = doc.tabName(t)}
@@ -30,6 +31,6 @@
         </span>
       </div>
     {/each}
-    <button class="map-tab-new" aria-label={tr('Novo mapa')} title="{tr('Novo mapa')} ({mod}N)" onclick={() => void doc.newMap()}><Plus size={16} /></button>
+    <button class="map-tab-new" aria-label={tr('Nova aba')} title="{tr('Nova aba')} ({mod}T)" onclick={() => void doc.newTab()}><Plus size={16} /></button>
   </div>
 {/if}

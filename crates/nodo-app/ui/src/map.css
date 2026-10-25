@@ -53,6 +53,7 @@
   border: 1px solid var(--line);
 }
 .map-tabs::-webkit-scrollbar { display: none; }
+.map-tabs.over { z-index: 41; }
 .map-tab {
   flex: none; position: relative; display: flex; align-items: center; height: 30px; border-radius: 9px;
   color: var(--muted); transition: background .12s ease, color .12s ease, box-shadow .12s ease;

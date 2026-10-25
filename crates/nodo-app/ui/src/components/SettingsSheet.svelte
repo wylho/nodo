@@ -236,7 +236,8 @@
             </div>
             <span class="keys-head">{t('Arquivo')}</span>
             <div class="keys">
-              <div class="keys-row"><span>{t('Novo mapa (aba nova)')}</span><kbd>{t('{a} ou {b}', { a: `${mod}N`, b: `${mod}T` })}</kbd></div>
+              <div class="keys-row"><span>{t('Novo mapa')}</span><kbd>{mod}N</kbd></div>
+              <div class="keys-row"><span>{t('Nova aba (tela inicial)')}</span><kbd>{mod}T</kbd></div>
               <div class="keys-row"><span>{t('Fechar a aba')}</span><kbd>{mod}W</kbd></div>
               <div class="keys-row"><span>{t('Próxima aba ou anterior')}</span><kbd>Ctrl+Tab Ctrl+⇧Tab</kbd></div>
               <div class="keys-row"><span>{t('Abrir')}</span><kbd>{mod}O</kbd></div>
