@@ -913,3 +913,83 @@ describe('botão de recolher em cada estrutura', () => {
     expect(at('tabela', folded).x).toBe(folded.x + folded.width + 11)
   })
 })
+
+describe('apresentação', () => {
+  it('o percurso sai do mapa: mapa inteiro, cada ramo e cada card na ordem, as notas soltas e o mapa inteiro', async () => {
+    const { seedDemo, previewBackend } = await import('../src/lib/preview')
+    const { buildSteps } = await import('../src/lib/present.svelte')
+    const { isCard } = await import('../src/lib/cardtext')
+    seedDemo()
+    const snap = previewBackend.get_snapshot()
+    const steps = buildSteps(snap)
+    expect(steps[0].kind).toBe('overview')
+    expect(steps.at(-1)!.kind).toBe('overview')
+    // Todo ramo principal e todo card à vista têm passo, na ordem do mapa (pré-ordem).
+    const top = snap.nodes.filter((n) => n.depth === 1).map((n) => n.id)
+    expect(steps.filter((s) => s.kind === 'branch' && top.includes(s.id!)).map((s) => s.id)).toEqual(top)
+    const cards = snap.nodes.filter((n) => isCard(n)).map((n) => n.id)
+    expect(steps.filter((s) => s.kind === 'card').map((s) => s.id)).toEqual(cards)
+    expect(steps.filter((s) => s.kind === 'note').map((s) => s.id)).toEqual(snap.notes.map((f) => f.id))
+    // O passo do ramo enquadra o ramo inteiro e deixa aceso o caminho até a raiz.
+    const branch = steps.find((s) => s.kind === 'branch')!
+    const root = snap.nodes.find((n) => n.parent === null)!
+    expect(branch.focus.nodes).toContain(root.id)
+    expect(branch.frame.nodes).not.toContain(root.id)
+    for (const n of snap.nodes) if (n.parent !== null && branch.frame.nodes.includes(n.parent)) expect(branch.frame.nodes).toContain(n.id)
+  })
+
+  it('revelar aos poucos: só a raiz na abertura, cada ramo entra no passo dele, tudo no fim', async () => {
+    const { seedDemo, previewBackend } = await import('../src/lib/preview')
+    const { buildSteps, revealedUntil } = await import('../src/lib/present.svelte')
+    seedDemo()
+    const snap = previewBackend.get_snapshot()
+    const steps = buildSteps(snap)
+    const root = snap.nodes.find((n) => n.parent === null)!
+    expect([...revealedUntil(steps, 0).nodes]).toEqual([root.id])
+    expect(revealedUntil(steps, 0).notes.size).toBe(0)
+    const b = steps.findIndex((s) => s.kind === 'branch')
+    for (const id of steps[b].frame.nodes) expect(revealedUntil(steps, b).nodes.has(id)).toBe(true)
+    expect(revealedUntil(steps, b - 1).nodes.has(steps[b].id!)).toBe(false)
+    const end = revealedUntil(steps, steps.length - 1)
+    expect(end.nodes.size).toBe(snap.nodes.length)
+    expect(end.notes.size).toBe(snap.notes.length)
+  })
+
+  it('clicar num tópico vai ao card dele, ou ao ramo de cima; a nota solta vai ao passo dela', async () => {
+    const { seedDemo, previewBackend } = await import('../src/lib/preview')
+    const { buildSteps, stepFor } = await import('../src/lib/present.svelte')
+    const { isCard } = await import('../src/lib/cardtext')
+    seedDemo()
+    const snap = previewBackend.get_snapshot()
+    const steps = buildSteps(snap)
+    const card = snap.nodes.find((n) => isCard(n))!
+    expect(steps[stepFor(steps, snap, card.id)]).toMatchObject({ kind: 'card', id: card.id })
+    const leaf = snap.nodes.find((n) => n.depth >= 2 && !isCard(n) && !n.has_children)!
+    const at = steps[stepFor(steps, snap, leaf.id)]
+    expect(at.kind).toBe('branch')
+    expect(at.frame.nodes).toContain(leaf.id)
+    const note = snap.notes[0]
+    expect(steps[stepFor(steps, snap, note.id, 'note')]).toMatchObject({ kind: 'note', id: note.id })
+  })
+
+  it('apresentar não muda o mapa, e sair volta para a edição', async () => {
+    const { seedDemo } = await import('../src/lib/preview')
+    const { doc } = await import('../src/lib/document.svelte')
+    const { present } = await import('../src/lib/present.svelte')
+    const { startPresentation, stopPresentation } = await import('../src/lib/presenting')
+    seedDemo()
+    await doc.load()
+    const before = JSON.stringify(doc.snapshot)
+    await startPresentation()
+    expect(present.on).toBe(true)
+    present.next()
+    present.toggleOverview()
+    present.next()
+    expect(present.index).toBe(1)
+    present.go(99)
+    expect(present.index).toBe(present.steps.length - 1)
+    stopPresentation()
+    expect(present.on).toBe(false)
+    expect(JSON.stringify(doc.snapshot)).toBe(before)
+  })
+})

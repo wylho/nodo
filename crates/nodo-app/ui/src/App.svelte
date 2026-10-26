@@ -7,6 +7,9 @@
   import Canvas from './components/Canvas.svelte'
   import TabBar from './components/TabBar.svelte'
   import StartScreen from './components/StartScreen.svelte'
+  import PresentBar from './components/PresentBar.svelte'
+  import { present } from './lib/present.svelte'
+  import { startPresentation, stopPresentation } from './lib/presenting'
   import { notes } from './lib/notes.svelte'
   import SettingsSheet from './components/SettingsSheet.svelte'
   import ConfirmDialog from './components/ConfirmDialog.svelte'
@@ -27,6 +30,7 @@
     fitSelection: () => canvasRef?.fitSelection(),
     actualSize: () => canvasRef?.actualSize(),
     addNoteAt: (x, y) => void canvasRef?.addNoteAt(x, y),
+    present: (from) => void startPresentation(from),
   }
 
   /** Menu de contexto do mapa: do nó, se houver um, senão do fundo. */
@@ -63,11 +67,37 @@
     void doc.pasteCards(cards)
   }
 
+  /**
+   * Apresentando, as teclas são da apresentação (e nada chega à edição): →, Espaço, PageDown e Enter avançam (o que os
+   * passadores de slides mandam), ← e PageUp voltam, O é a visão geral, R revela aos poucos, Esc sai.
+   */
+  function presentKey(e: KeyboardEvent) {
+    const key = e.key.toLowerCase()
+    // ⌘Q, ⌘W e afins continuam com o sistema; o resto fica aqui.
+    if ((e.metaKey || e.ctrlKey) && key !== 'enter') return
+    e.preventDefault()
+    if (['arrowright', 'arrowdown', 'pagedown', ' ', 'enter', 'n'].includes(key)) present.next()
+    else if (['arrowleft', 'arrowup', 'pageup', 'backspace', 'p'].includes(key)) present.prev()
+    else if (key === 'home') present.go(0)
+    else if (key === 'end') present.go(present.steps.length - 1)
+    else if (key === 'o') present.toggleOverview()
+    else if (key === 'r') present.toggleReveal()
+    else if (key === 'escape') stopPresentation()
+  }
+
   function onKeydown(e: KeyboardEvent) {
+    if (present.on) return presentKey(e)
     // Com uma folha ou confirmação aberta, as teclas são dela.
     if (ui.settingsOpen || ui.confirmRequest) return
     const mod = e.metaKey || e.ctrlKey
     const key = e.key.toLowerCase()
+
+    // Apresentar: F5 (como no PowerPoint) ou ⌥⌘P (como no Keynote).
+    if ((e.key === 'F5' || (mod && e.altKey && e.code === 'KeyP')) && doc.hasDocument && !typing(e)) {
+      e.preventDefault()
+      void startPresentation()
+      return
+    }
 
     // Ctrl+Tab e Ctrl+⇧Tab passam de aba, em todos os sistemas (como nos navegadores).
     if (e.ctrlKey && e.key === 'Tab') {
@@ -228,11 +258,14 @@
 <!-- Ao voltar para a janela, confere se um agente salvou o arquivo pelo MCP. -->
 <svelte:window onkeydown={onKeydown} onkeyup={onKeyup} onblur={() => (ui.spaceHeld = false)} oncopy={onCopy} onpaste={onPaste} onfocus={() => void doc.checkDisk()} />
 
-<div class="shell map-shell">
+<div class="shell map-shell" class:presenting={present.on}>
   <TopBar />
 
   <div class="map-body">
     <Canvas bind:this={canvasRef} oncontext={openMenu} onzoom={(z) => { zoom = z; prefs.setZoom(z) }}>
+      {#if present.on}
+        <PresentBar />
+      {:else}
       <TabBar />
       <div class="zoombar">
         <button aria-label={t('Diminuir zoom')} title={t('Diminuir ({tecla})', { tecla: `${modKey}-` })} onclick={() => canvasRef?.zoomBy(1 / 1.2)}><Minus size={17} /></button>
@@ -240,6 +273,7 @@
         <button aria-label={t('Aumentar zoom')} title={t('Aumentar ({tecla})', { tecla: `${modKey}=` })} onclick={() => canvasRef?.zoomBy(1.2)}><Plus size={17} /></button>
         <button aria-label={t('Ver o mapa inteiro')} title="{t('Ver o mapa inteiro')} (⇧1)" onclick={() => canvasRef?.fit(true)}><Maximize size={17} /></button>
       </div>
+      {/if}
     </Canvas>
     {#if doc.loaded && !doc.hasDocument}<StartScreen />{/if}
 
@@ -247,7 +281,7 @@
 
   <!-- Botão ? no canto (pedido do usuário): ao passar o mouse mostra o que dá para fazer agora (tira a dúvida de "já
        posso digitar?"); o clique leva à lista de atalhos nas Configurações. Só com teclado, então não no celular. -->
-  {#if doc.hasDocument}
+  {#if doc.hasDocument && !present.on}
     <div class="key-help">
       <button
         class="key-help-btn"

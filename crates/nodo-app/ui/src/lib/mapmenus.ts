@@ -15,6 +15,7 @@ import {
   PanelRight,
   Pencil,
   Plus,
+  Presentation,
   Redo2,
   Search,
   Share,
@@ -49,6 +50,8 @@ export interface ViewActions {
   actualSize: () => void
   /** Nota solta no ponto da janela onde o menu abriu. */
   addNoteAt: (x: number, y: number) => void
+  /** Apresentar o mapa, do começo ou a partir de um tópico. */
+  present: (from?: number) => void
 }
 
 const COLORS: [string, string][] = [
@@ -210,6 +213,7 @@ export function nodeMenu(id: number, view: ViewActions): MenuEntry[] {
     )
   }
   items.push({ label: t('Enquadrar este ramo'), icon: Focus, hint: '⇧2', onSelect: view.fitSelection })
+  items.push({ label: t('Apresentar a partir daqui'), icon: Presentation, onSelect: () => view.present(id) })
   items.push(SEP, ...clipItems(true))
   if (!isRoot) {
     items.push(SEP, { label: t('Excluir'), icon: Trash2, hint: 'Delete', danger: true, onSelect: () => void doc.remove() })
@@ -223,6 +227,7 @@ export function backgroundMenu(view: ViewActions, at: { x: number; y: number }):
     { label: t('Nova nota aqui'), icon: StickyNote, onSelect: () => view.addNoteAt(at.x, at.y) },
     ...clipItems(false),
     SEP,
+    { label: t('Apresentar'), icon: Presentation, hint: 'F5', onSelect: () => view.present() },
     { label: t('Ver o mapa inteiro'), icon: Maximize, hint: '⇧1', onSelect: view.fit },
     { label: t('Tamanho real'), icon: ZoomIn, hint: `${mod}0`, onSelect: view.actualSize },
     SEP,

@@ -234,6 +234,16 @@
               <div class="keys-row"><span>{t('Aproximar ou afastar')}</span><kbd>{mod}= {mod}-</kbd></div>
               <div class="keys-row"><span>{t('Buscar')}</span><kbd>{mod}F</kbd></div>
             </div>
+            <span class="keys-head">{t('Apresentação')}</span>
+            <div class="keys">
+              <div class="keys-row"><span>{t('Apresentar')}</span><kbd>F5 {alt}{mod}P</kbd></div>
+              <div class="keys-row"><span>{t('Avançar')}</span><kbd>→ {t('Espaço')}</kbd></div>
+              <div class="keys-row"><span>{t('Voltar')}</span><kbd>←</kbd></div>
+              <div class="keys-row"><span>{t('Ir ao passo de um tópico')}</span><kbd>{t('clique')}</kbd></div>
+              <div class="keys-row"><span>{t('Visão geral')}</span><kbd>O</kbd></div>
+              <div class="keys-row"><span>{t('Revelar aos poucos')}</span><kbd>R</kbd></div>
+              <div class="keys-row"><span>{t('Sair da apresentação')}</span><kbd>Esc</kbd></div>
+            </div>
             <span class="keys-head">{t('Arquivo')}</span>
             <div class="keys">
               <div class="keys-row"><span>{t('Novo mapa')}</span><kbd>{mod}N</kbd></div>

@@ -62,6 +62,11 @@ export interface DrawOptions {
   paintCards?: boolean
   /** Os cards lidos da tela (`domcard.ts`), para a exportação repetir o card exato; sem eles, o card não é pintado. */
   cards?: Map<string, CardPaint>
+  /**
+   * Apresentação: a opacidade de cada tópico (0 escondido, 1 aceso; quem não está no mapa fica aceso). O ramo que chega
+   * num tópico segue a opacidade dele. Sem botões de recolher, que são da edição.
+   */
+  fade?: Map<number, number>
 }
 
 /**
@@ -81,6 +86,8 @@ export function resolveColor(token: string | null, colors: ThemeColors): string 
 export function draw(o: DrawOptions) {
   const { snapshot, colors, view, selected, hovered, matches, width, height, dpr } = o
   const picked = o.picked ?? new Set<number>()
+  const fade = o.fade
+  const alpha = (id: number) => fade?.get(id) ?? 1
   const linkStyle = o.linkStyle ?? 'curved'
   const canvas = o as DrawOptions & { ctx?: CanvasRenderingContext2D }
   const ctx = canvas.ctx
@@ -124,9 +131,11 @@ export function draw(o: DrawOptions) {
       tableBg.set(n.id, own ?? tableBg.get(n.parent ?? -1) ?? colors.surface)
       if (!n.cell) continue
       const [cx, cy, cw, ch] = n.cell
+      ctx.globalAlpha = alpha(n.id)
       roundRect(ctx, cx + 1, cy + 1, cw - 2, ch - 2, 6)
       ctx.fillStyle = tableBg.get(n.id)!
       ctx.fill()
+      ctx.globalAlpha = 1
     }
   }
 
@@ -138,6 +147,7 @@ export function draw(o: DrawOptions) {
       if (n.cell || !p) continue
       const ex = p.x + Math.max(10, (n.x - p.x) / 2)
       const my = n.y + n.height / 2
+      ctx.globalAlpha = alpha(n.id)
       ctx.beginPath()
       ctx.moveTo(ex, p.y + p.height)
       ctx.lineTo(ex, my - 6)
@@ -147,6 +157,7 @@ export function draw(o: DrawOptions) {
       ctx.lineWidth = 1.5
       ctx.lineCap = 'round'
       ctx.stroke()
+      ctx.globalAlpha = 1
     }
   }
 
@@ -157,10 +168,15 @@ export function draw(o: DrawOptions) {
     // Na linha do tempo, cada trecho da linha vai do principal anterior (ou da raiz) até este.
     const i = p ? p.child_ids.indexOf(n.id) : -1
     const prev = p && snapshot.structure === 'linha' && p.parent === null && i > 0 ? byId.get(p.child_ids[i - 1]) : undefined
-    if (p) drawBranch(ctx, prev ?? p, n, theme, branch.get(n.id) ?? colors.muted, linkStyle, snapshot.structure, prev !== undefined)
+    if (!p || alpha(n.id) <= 0) continue
+    ctx.globalAlpha = alpha(n.id)
+    drawBranch(ctx, prev ?? p, n, theme, branch.get(n.id) ?? colors.muted, linkStyle, snapshot.structure, prev !== undefined)
+    ctx.globalAlpha = 1
   }
 
   for (const n of snapshot.nodes) {
+    if (alpha(n.id) <= 0) continue
+    ctx.globalAlpha = alpha(n.id)
     drawNode(ctx, n, {
       colors,
       theme,
@@ -173,6 +189,7 @@ export function draw(o: DrawOptions) {
       cards: o.cards,
       tableBg: table ? tableBg.get(n.id) : undefined,
     })
+    ctx.globalAlpha = 1
   }
 
   // Notas soltas: na tela são HTML por cima do canvas; na exportação, o mesmo card repetido aqui.
@@ -185,7 +202,7 @@ export function draw(o: DrawOptions) {
 
   // Botão de recolher/expandir no começo do ramo. Na exportação, só o de quem está recolhido (o número diz o que
   // ficou escondido); o "−" é só para a tela.
-  {
+  if (!fade) {
     for (const n of snapshot.nodes) {
       if (!n.has_children || n.parent === null || (o.paintCards && !n.folded)) continue
       drawKnob(ctx, n, {
@@ -472,9 +489,10 @@ function drawNode(ctx: CanvasRenderingContext2D, n: FlatNode, o: NodeOpts) {
       ctx.shadowColor = fill
       ctx.shadowBlur = 14
       ctx.shadowOffsetY = 3
-      ctx.globalAlpha = 0.35
+      const a0 = ctx.globalAlpha
+      ctx.globalAlpha = a0 * 0.35
       ctx.fill()
-      ctx.globalAlpha = 1
+      ctx.globalAlpha = a0
       ctx.shadowColor = 'transparent'
       ctx.shadowBlur = 0
       ctx.shadowOffsetY = 0
@@ -486,10 +504,11 @@ function drawNode(ctx: CanvasRenderingContext2D, n: FlatNode, o: NodeOpts) {
   const chip = o.tableBg !== undefined && n.depth >= 2
   if (chip) {
     roundRect(ctx, x, y, w, h, 10)
-    ctx.globalAlpha = 0.6
+    const a0 = ctx.globalAlpha
+    ctx.globalAlpha = a0 * 0.6
     ctx.fillStyle = colors.surface
     ctx.fill()
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = a0
     ctx.strokeStyle = colors.cardEdge
     ctx.lineWidth = 1
     ctx.stroke()
@@ -527,9 +546,10 @@ function drawNode(ctx: CanvasRenderingContext2D, n: FlatNode, o: NodeOpts) {
     roundRect(ctx, x - 3, y - 3, w + 6, h + 6, radius + 3)
     ctx.strokeStyle = colors.accent
     ctx.lineWidth = isSelected ? 2 : 1.5
-    ctx.globalAlpha = ring
+    const a0 = ctx.globalAlpha
+    ctx.globalAlpha = a0 * ring
     ctx.stroke()
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = a0
   }
 
   // Rótulo
@@ -566,9 +586,10 @@ function drawCard(ctx: CanvasRenderingContext2D, n: FlatNode, o: NodeOpts) {
     roundRect(ctx, x - 3, y - 3, w + 6, h + 6, CARD.radius + 3)
     ctx.strokeStyle = colors.accent
     ctx.lineWidth = o.isSelected ? 2 : 1.5
-    ctx.globalAlpha = ring
+    const a0 = ctx.globalAlpha
+    ctx.globalAlpha = a0 * ring
     ctx.stroke()
-    ctx.globalAlpha = 1
+    ctx.globalAlpha = a0
   }
   ctx.restore()
 }

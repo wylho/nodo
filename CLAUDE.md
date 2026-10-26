@@ -434,6 +434,23 @@ mesmo núcleo do aplicativo. Começou inspirado no [Minder](https://github.com/p
   comando `new_tab`, `blank` no `TabInfo` e `active` também na aba em branco; interface `doc.newTab` (o + e ⌘T; ⌘N
   continua criando o mapa), a aba mostra "Nova aba" e fica por cima da tela inicial (`.map-tabs.over`). Espelho em
   `preview.ts`; testes em `tabs.rs` e `tests/lib.test.ts`.
+- **Modo Apresentação, 1ª versão** (pedido do usuário, proposta escolhida numa página com os três jeitos lado a lado:
+  o voo como padrão, revelar como chave, o card como slide): `lib/present.svelte.ts` (`buildSteps`: percurso
+  automático pela pré-ordem do mapa, mapa inteiro → cada ramo principal (e os sub-ramos de um ramo grande) → cada
+  card → notas soltas → mapa inteiro; `revealedUntil`, `stepFor`, `present` com passo, visão geral e "Revelar aos
+  poucos" guardado em `nodo.ui.presentReveal`), `lib/presenting.ts` (entrar: fecha card, campo e grupo, tela cheia
+  pelo Tauri `setFullscreen` (permissão `core:window:allow-set-fullscreen`) ou pelo navegador na prévia; sair devolve
+  a janela), `Canvas.svelte` (`flyTo`: o centro anda em linha reta e a escala em log, afastando no meio quando o
+  salto é longo, como no Prezi; `frameStep`; o que não é do passo esmaece a 14% e, no revelar, some; os cards em HTML
+  pela opacidade com transição; clicar num tópico vai ao passo dele, arrastar olha o mapa; ao sair, a vista volta
+  como estava), `render.ts` (`fade` por tópico, sem botões de recolher), `components/PresentBar.svelte` (voltar,
+  pontinhos dos passos ou "3 / 41", avançar, revelar, visão geral, sair; some com o mouse parado). Entrar: botão na
+  barra, F5 ou ⌥⌘P, "Apresentar" no menu do fundo e "Apresentar a partir daqui" no do tópico. Teclas: →/Espaço/
+  PageDown/Enter avançam (passadores de slides), ←/PageUp voltam, O, R, Home, End, Esc. Atalhos nas Configurações.
+  Testes em `tests/lib.test.ts` (percurso, revelar, clique, não muda o mapa). **Segunda versão** (combinada): percurso
+  editável gravado no `.nodo`, visão do apresentador na 2ª tela com notas por passo, ponteiro laser, exportar o
+  percurso em PDF e o agente montar a apresentação pelo MCP. Hoje o card no passo é o card do mapa ampliado (a prévia:
+  a tabela aparece só como resumo e textos longos cortam no limite da prévia).
 - **Próximo:** a exportação desenhar emoji e pílulas do card; anexos e gravações no tópico (precisam de um lugar
   para os arquivos ao lado do `.nodo`); o Ideario usar `CardPills`/`CardDialog` do Atrio no lugar das cópias dele;
   estruturas do XMind que faltam (chaves, linha do tempo, espinha de peixe, matriz, tabela em árvore); aba Estrutura

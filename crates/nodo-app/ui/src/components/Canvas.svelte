@@ -14,6 +14,7 @@
   import { ui } from '../lib/ui.svelte'
   import { groupMenu } from '../lib/mapmenus'
   import { branchColors, levelStyle, mapTheme } from '../lib/maptheme'
+  import { present, revealedUntil, stepFor } from '../lib/present.svelte'
 
   import type { Snippet } from 'svelte'
 
@@ -72,6 +73,7 @@
 
   function onContextMenu(e: MouseEvent) {
     e.preventDefault()
+    if (present.on) return
     const r = stageEl.getBoundingClientRect()
     const hit = hitTest(doc.snapshot, view, e.clientX, e.clientY, r)
     // No grupo, o menu é do grupo: a escolha fica como está.
@@ -174,16 +176,18 @@
     }
     const ctx = canvas.getContext('2d')
     if (!ctx) return
+    const showing = present.on
     draw({
       snapshot: doc.snapshot,
       linkStyle: prefs.linkStyle,
       mode: theme.mode,
       colors,
       view,
-      selected: doc.selected,
-      picked: doc.picked,
+      selected: showing ? null : doc.selected,
+      picked: showing ? new Set() : doc.picked,
       hovered: doc.hovered,
-      matches: doc.matches,
+      matches: showing ? new Set() : doc.matches,
+      fade: showing ? currentFade() : undefined,
       width: r.width,
       height: r.height,
       dpr,
@@ -210,8 +214,177 @@
     void doc.hovered
     void doc.matches
     void prefs.linkStyle
+    void present.on
     scheduleRender()
   })
+
+  // ── Apresentação: a câmera voa de passo em passo e o que não é do passo esmaece (ou some, no "Revelar aos poucos") ──
+
+  /** Quanto fica do que não é do passo: à vista, para quem assiste não perder o lugar, mas sem disputar atenção. */
+  const DIM = 0.14
+  const FADE_MS = 520
+
+  /** A opacidade de destino de cada tópico e nota solta no passo de agora. */
+  const presentTargets = $derived.by(() => {
+    const step = present.on ? present.step : null
+    if (!step) return null
+    const nodes = new Map<number, number>()
+    const notesA = new Map<number, number>()
+    const shown = present.reveal && !present.overview ? revealedUntil(present.steps, present.index) : null
+    const lit = present.overview ? null : { nodes: new Set(step.focus.nodes), notes: new Set(step.focus.notes) }
+    for (const n of doc.snapshot.nodes) nodes.set(n.id, shown && !shown.nodes.has(n.id) ? 0 : !lit || lit.nodes.has(n.id) ? 1 : DIM)
+    for (const f of doc.snapshot.notes) notesA.set(f.id, shown && !shown.notes.has(f.id) ? 0 : !lit || lit.notes.has(f.id) ? 1 : DIM)
+    return { nodes, notes: notesA }
+  })
+
+  // O desenho do canvas passa de uma opacidade à outra em FADE_MS (os cards em HTML fazem o mesmo por CSS).
+  let fadeFrom = new Map<number, number>()
+  let fadeTo = new Map<number, number>()
+  let fadeT0 = 0
+
+  function currentFade(): Map<number, number> {
+    const k = Math.min(1, (performance.now() - fadeT0) / FADE_MS)
+    if (k >= 1) return fadeTo
+    const e = k * k * (3 - 2 * k)
+    const out = new Map<number, number>()
+    for (const [id, to] of fadeTo) {
+      const from = fadeFrom.get(id) ?? 1
+      out.set(id, from + (to - from) * e)
+    }
+    scheduleRender()
+    return out
+  }
+
+  /** A caixa (em unidades do mundo) do que o passo enquadra: a célula na tabela, o card ou o tópico, as notas soltas. */
+  function boxOf(ids: Iterable<number>, noteIds: Iterable<number>) {
+    const b = { min_x: Infinity, min_y: Infinity, max_x: -Infinity, max_y: -Infinity }
+    const add = (x: number, y: number, w: number, h: number) => {
+      b.min_x = Math.min(b.min_x, x)
+      b.min_y = Math.min(b.min_y, y)
+      b.max_x = Math.max(b.max_x, x + w)
+      b.max_y = Math.max(b.max_y, y + h)
+    }
+    for (const id of ids) {
+      const n = doc.node(id)
+      if (!n) continue
+      if (n.cell) add(...n.cell)
+      else add(n.x, n.y, n.width, n.height)
+    }
+    for (const id of noteIds) {
+      const f = doc.freeNote(id)
+      if (f) add(f.x, f.y, f.width, f.height)
+    }
+    return Number.isFinite(b.min_x) ? b : null
+  }
+
+  const reducedMotion = typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+  let flight = 0
+
+  /**
+   * Voa até a caixa, como no Prezi: o centro anda em linha reta pelo mundo e, quando o salto é longo, a câmera afasta
+   * um pouco no meio do caminho e volta a aproximar, para quem assiste ver de onde saiu e para onde vai.
+   */
+  function flyTo(b: { min_x: number; min_y: number; max_x: number; max_y: number }, maxScale: number, padShare: number) {
+    const r = stageEl.getBoundingClientRect()
+    const pad = Math.max(24, Math.min(r.width, r.height) * padShare)
+    const w = b.max_x - b.min_x || 1
+    const h = b.max_y - b.min_y || 1
+    const s1 = Math.max(0.08, Math.min((r.width - pad * 2) / w, (r.height - pad * 2) / h, maxScale))
+    const c1 = { x: (b.min_x + b.max_x) / 2, y: (b.min_y + b.max_y) / 2 }
+    const s0 = view.scale
+    const c0 = { x: (r.width / 2 - view.x) / s0, y: (r.height / 2 - view.y) / s0 }
+    const place = (cx: number, cy: number, s: number) => {
+      view.scale = s
+      view.x = r.width / 2 - cx * s
+      view.y = r.height / 2 - cy * s
+    }
+    cancelAnimationFrame(flight)
+    if (reducedMotion) {
+      place(c1.x, c1.y, s1)
+      scheduleRender()
+      return
+    }
+    // O salto em telas: longe o bastante, a câmera afasta no meio (até ~45%).
+    const travel = (Math.hypot(c1.x - c0.x, c1.y - c0.y) * Math.min(s0, s1)) / Math.hypot(r.width, r.height)
+    const dip = travel > 0.6 ? Math.min(0.45, 0.22 * travel) : 0
+    const dur = Math.min(1300, 700 + travel * 260)
+    const t0 = performance.now()
+    const frameFn = (now: number) => {
+      const k = Math.min(1, (now - t0) / dur)
+      const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2
+      // A escala anda em escala logarítmica (o zoom parece constante), com o afastamento no meio.
+      const s = Math.exp(Math.log(s0) + (Math.log(s1) - Math.log(s0)) * e) * (1 - dip * Math.sin(Math.PI * k))
+      place(c0.x + (c1.x - c0.x) * e, c0.y + (c1.y - c0.y) * e, s)
+      render()
+      if (k < 1) flight = requestAnimationFrame(frameFn)
+    }
+    flight = requestAnimationFrame(frameFn)
+  }
+
+  /** Enquadra o passo de agora. */
+  function frameStep() {
+    const step = present.on ? present.step : null
+    if (!step) return
+    if (present.overview) {
+      const b = boxOf(doc.snapshot.nodes.map((n) => n.id), doc.snapshot.notes.map((f) => f.id))
+      if (b) flyTo(b, 1.35, 0.06)
+      return
+    }
+    // No "Revelar aos poucos", a visão geral enquadra só o que já entrou (na abertura, a raiz).
+    let ids = step.frame.nodes
+    let noteIds = step.frame.notes
+    if (present.reveal && step.kind === 'overview') {
+      const shown = revealedUntil(present.steps, present.index)
+      ids = ids.filter((id) => shown.nodes.has(id))
+      noteIds = noteIds.filter((id) => shown.notes.has(id))
+    }
+    const b = boxOf(ids, noteIds)
+    if (!b) return
+    // O card cresce e ocupa a tela; um ramo fica de perto, mas inteiro.
+    const close = step.kind === 'card' || step.kind === 'note'
+    flyTo(b, close ? 3.2 : step.kind === 'branch' ? 1.6 : 1.35, close ? 0.1 : 0.07)
+  }
+
+  /** A vista de antes de apresentar, para voltar a editar onde estava. */
+  let beforePresent: Viewport | null = null
+
+  $effect(() => {
+    const on = present.on
+    const targets = presentTargets
+    void present.index
+    void present.overview
+    void present.reveal
+    untrack(() => {
+      if (on && !beforePresent) beforePresent = { ...view }
+      if (!on) {
+        cancelAnimationFrame(flight)
+        if (beforePresent) {
+          Object.assign(view, beforePresent)
+          beforePresent = null
+        }
+        fadeTo = new Map()
+        scheduleRender()
+        return
+      }
+      fadeFrom = currentFade()
+      fadeTo = targets?.nodes ?? new Map()
+      fadeT0 = performance.now()
+      // Ao abrir, o palco ainda está crescendo (a barra sai, a tela cheia entra): enquadra depois de assentar.
+      requestAnimationFrame(() => requestAnimationFrame(frameStep))
+    })
+  })
+
+  // Um agente mudou o mapa durante a apresentação: o percurso se refaz.
+  $effect(() => {
+    const snap = doc.snapshot
+    untrack(() => present.refresh(snap))
+  })
+
+  /** A opacidade e o clique de um card em HTML na apresentação (a transição é do CSS). */
+  function cardFade(kind: 'node' | 'note', id: number) {
+    const a = (kind === 'node' ? presentTargets?.nodes : presentTargets?.notes)?.get(id)
+    return a === undefined ? '' : `; opacity: ${a}; transition: opacity ${FADE_MS}ms ease${a === 0 ? '; visibility: hidden' : ''}`
+  }
 
   /** Abaixo desta escala o card mostra só o emoji e o título, legíveis (como no Miro): o mapa afastado é visão geral. */
   const FAR = 0.5
@@ -238,6 +411,14 @@
 
   function onPointerDown(e: PointerEvent) {
     const r = stageEl.getBoundingClientRect()
+    // Apresentando: clicar num tópico vai até o passo dele; arrastar o fundo olha o mapa à vontade.
+    if (present.on) {
+      if (e.button !== 0 && e.button !== 1) return
+      const hit = e.button === 0 ? hitTest(doc.snapshot, view, e.clientX, e.clientY, r) : null
+      if (hit !== null && (presentTargets?.nodes.get(hit) ?? 1) > 0) present.go(stepFor(present.steps, doc.snapshot, hit))
+      else startPan(e)
+      return
+    }
     // Mover o mapa: botão do meio, Espaço apertado, ou o arrasto do fundo quando a preferência é mover.
     if (e.button === 1 || ui.spaceHeld) {
       e.preventDefault()
@@ -366,6 +547,13 @@
       return
     }
     const r = stageEl.getBoundingClientRect()
+    if (present.on) {
+      const hit = hitTest(doc.snapshot, view, e.clientX, e.clientY, r)
+      const live = hit !== null && (presentTargets?.nodes.get(hit) ?? 1) > 0 ? hit : null
+      if (live !== doc.hovered) doc.hovered = live
+      stageEl.classList.toggle('on-dot', live !== null)
+      return
+    }
     // Em cima do botão de recolher, o tópico continua "com o mouse em cima" (senão o botão some antes do clique).
     const knob = hitKnob(doc.snapshot, view, e.clientX, e.clientY, r)
     const hit = hitTest(doc.snapshot, view, e.clientX, e.clientY, r) ?? knob
@@ -418,6 +606,13 @@
   let freeDrag = $state<{ id: number; dx: number; dy: number } | null>(null)
 
   function startFreeDrag(e: PointerEvent, id: number) {
+    // Apresentando: a nota solta é um passo; clicar vai até ela.
+    if (present.on) {
+      e.stopPropagation()
+      const i = stepFor(present.steps, doc.snapshot, id, 'note')
+      if (i >= 0) present.go(i)
+      return
+    }
     // O seletor de status e os botões do card são deles.
     if (e.button !== 0 || (e.target as HTMLElement).closest('button')) return
     // Espaço apertado: o arrasto move o mapa, mesmo começando em cima da nota.
@@ -483,6 +678,7 @@
   }
 
   function onDblClick(e: MouseEvent) {
+    if (present.on) return
     const r = stageEl.getBoundingClientRect()
     const hit = hitTest(doc.snapshot, view, e.clientX, e.clientY, r)
     if (hit === null) return
@@ -650,12 +846,12 @@
       class="map-card{view.scale < FAR ? ' far' : ''}"
       card={c.summary}
       thumb={(h) => attachments.thumb(h)}
-      style={cardStyle(c.n.x, c.n.y, c.n.width, c.n.height)}
+      style={cardStyle(c.n.x, c.n.y, c.n.width, c.n.height) + cardFade('node', c.n.id)}
       tabindex={-1}
       onstatus={(s) => void doc.setStatus(c.n.id, s)}
     />
   {/each}
-  {#if doc.editing && editorBox}
+  {#if doc.editing && editorBox && !present.on}
     <textarea
       class="inline-editor"
       rows="1"
@@ -690,12 +886,12 @@
             f.y + (moved?.dy ?? 0) + (doc.pickedNotes.has(f.id) ? (groupShift?.dy ?? 0) : 0),
             f.width,
             f.height,
-          )}
+          ) + cardFade('note', f.id)}
           data-free-note={f.id}
           onpointerdown={(e) => startFreeDrag(e, f.id)}
           ondblclick={(e) => {
             e.stopPropagation()
-            notes.showFree(f.id)
+            if (!present.on) notes.showFree(f.id)
           }}
           onkeydown={(e) => e.key === 'Enter' && notes.showFree(f.id)}
           onstatus={(st) => void doc.setFreeStatus(f.id, st)}

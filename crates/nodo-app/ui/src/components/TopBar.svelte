@@ -10,6 +10,7 @@
     FolderOpen,
     Palette,
     Plus,
+    Presentation,
     Redo2,
     Save,
     Search,
@@ -24,6 +25,7 @@
   import { prefs } from '../lib/prefs.svelte'
   import { ui } from '../lib/ui.svelte'
   import MapThemeSheet from './MapThemeSheet.svelte'
+  import { startPresentation } from '../lib/presenting'
 
 
   const mod = /Mac/.test(navigator.platform) ? '⌘' : 'Ctrl+'
@@ -63,6 +65,7 @@
     <button class="icon-btn" aria-label={t('Salvar')} title="{t('Salvar')} ({mod}S)" onclick={() => doc.saveDialog()}><Save size={20} /></button>
     <button class="icon-btn roomy" aria-label={t('Exportar')} title="{t('Exportar')} ({mod}⇧E)" onclick={() => (ui.exportOpen = true)}><Share size={19} /></button>
     <button class="icon-btn" aria-label={t('Estrutura e tema do mapa')} title={t('Estrutura e tema do mapa')} onclick={() => (ui.themeOpen = true)}><Palette size={20} /></button>
+    <button class="icon-btn" aria-label={t('Apresentar')} title="{t('Apresentar')} (F5)" onclick={() => void startPresentation()}><Presentation size={20} /></button>
     <span class="doc-title" title={doc.snapshot.path ?? title}>
       <span class="grow">{title}</span>
       {#if doc.snapshot.dirty}<i class="dirty" aria-label={t('Alterações não salvas')} title={t('Alterações não salvas')}></i>{/if}
