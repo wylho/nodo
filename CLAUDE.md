@@ -13,12 +13,13 @@ mesmo núcleo do aplicativo. Começou inspirado no [Minder](https://github.com/p
   a mudança se faz no Atrio, sobe a tag e os **dois** apps sobem juntos (nunca deixar um app numa tag velha). Mesmo
   quando o usuário fala de um app só, se o assunto é peça do Atrio, o caminho é o Atrio. Plano em
   `atrio/docs/UNIFICACAO.md`.
-- **Skills do Matt Pocock (pedido do usuário, 28/10/2026): nos três projetos e em todo app novo.** O plugin
-  `mattpocock-skills@claude-plugins-official` fica ligado no `.claude/settings.json` do repositório (toda sessão nova já
-  o tem). Usar as skills dele no trabalho: `tdd`, `diagnosing-bugs`, `code-review`, `to-spec`/`to-tickets`/`triage`,
+- **Skills do Matt Pocock (pedido do usuário, 28/10/2026): nos três projetos e em todo app novo.** As skills ficam **copiadas no próprio repositório**, em `.claude/skills/` (do plugin
+  `mattpocock-skills` 1.3.1, licença MIT em `.claude/skills/LICENSE-mattpocock-skills.txt`): assim toda sessão, local ou
+  na nuvem, já as tem, sem depender de instalar plugin (na nuvem a instalação falhava e elas nunca apareciam). A cópia
+  principal mora no Atrio; `scripts/sync-skills.sh` leva para os apps. Usar as skills dele no trabalho: `tdd`, `diagnosing-bugs`, `code-review`, `to-spec`/`to-tickets`/`triage`,
   `implement`, `prototype`, `improve-codebase-architecture`, `domain-modeling`, `grill-me`. Elas convivem com as skills
   do usuário (`rust-testing`, `rust-patterns`, `sync-site`, `atrio-hub`), que valem quando falam de algo mais
-  específico. App novo: copiar o `.claude/settings.json` e o `docs/agents/` do Atrio e pôr aqui o bloco "Agent skills".
+  específico. App novo: copiar o `.claude/skills/` e o `docs/agents/` do Atrio e pôr aqui o bloco "Agent skills".
 - **Local-first**: o mapa vive num arquivo no disco do usuário. Nada de servidor, conta ou rede para abrir, editar ou salvar.
 - **O arquivo é do usuário**: texto legível sem o app, gravado de forma atômica, ida e volta sem perda. É o `.nodo`
   (JSON, D28); compatibilidade com o Minder original **não** é requisito (D27).
