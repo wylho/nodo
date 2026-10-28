@@ -57,6 +57,7 @@ export const EN: Record<string, string> = {
   'Prévia: dados de exemplo': 'Preview: sample data',
   'Rodando fora do app: sem acesso ao documento': 'Running outside the app: no access to the document',
   'Copiado como card': 'Copied as a card',
+  'Ficaram de fora: {nomes}': 'Left out: {nomes}',
   'Mapa mental': 'Mind map',
   'Texto do nó': 'Topic text',
   'Nenhum mapa aberto — use Novo para começar': 'No map open — use New to start',

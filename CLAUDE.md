@@ -492,8 +492,13 @@ Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `
   (`settle`), salva (`flush` agora espera os dois salvamentos) e só então some; antes, fechar gravando perdia o áudio.
   Com um card aberto, os atalhos do mapa, o copiar/colar de tópicos e o Espaço param (`cardOpen()` em `App.svelte`):
   antes ⌘W fechava a aba, ⌘N criava mapa e ⌘/ recolhia atrás do card.
+- **Atrio 0.24.0: card na área de transferência v2** (tarefa 03 do roteiro; escolha do usuário: os arquivos vão
+  junto): copiar um tópico (⌘C, menu, grupo) leva lembrete, status e os arquivos dos anexos (até 25 MB por cópia; o
+  aviso diz o que ficou de fora). `lib/cardclip.ts` (`copyCards`, `copiedMessage`, `withImportedFiles`,
+  `cardFieldsOf`); com anexo, o ⌘C passa pela área de transferência do sistema (buscar os bytes é assíncrono), sem
+  anexo continua pelo próprio evento. Colar (`pasteCard`/`pasteCards`) importa os arquivos no `.nodo` antes e grava
+  lembrete e status no tópico. Teste em `tests/lib.test.ts`.
 - **Próximo** (revisto em 28/10/2026; o roteiro dos três projetos, com estado, está em `atrio/.scratch/roteiro/map.md`):
-  fechar o card esperar o `settle()` e os atalhos do mapa pararem com o card aberto (`CardSession` do Atrio, tarefa
-  02); área de transferência v2 com lembrete, status e anexos (tarefa 03); Apresentação 2ª versão (tarefa 09);
+  Apresentação 2ª versão (tarefa 09);
   espinha de peixe, chaves e abrir `.xmind` (tarefa 10). Já feitos e fora da lista: exportar desenhar o card
   (`lib/domcard.ts`), anexos no tópico (D30), linha do tempo, matriz e tabela em árvore.

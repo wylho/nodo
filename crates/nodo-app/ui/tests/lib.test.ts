@@ -1003,3 +1003,19 @@ describe('arrastar arquivos para a janela', () => {
     expect(openable(['/a/foto.png', '/a/doc.pdf'])).toEqual([])
   })
 })
+
+describe('card colado do Ideario (Atrio, versão 2)', () => {
+  it('lembrete e status chegam ao tópico; o aviso diz o que ficou de fora', async () => {
+    const { cardFieldsOf, copiedMessage } = await import('../src/lib/cardclip')
+    const { seedDemo, previewBackend } = await import('../src/lib/preview')
+    seedDemo()
+    const root = previewBackend.get_snapshot().nodes.find((n) => n.parent === null)!
+    const at = Date.UTC(2026, 10, 3, 12)
+    const fields = cardFieldsOf({ title: 'Consulta', markdown: '', reminderAt: at, reminderRepeat: 'week', reminderDoing: true, tags: ['#Saúde'] })
+    const snap = previewBackend.add_topic({ parent: root.id, text: 'Consulta', note: '', card: fields })
+    const node = snap.nodes.find((n) => n.text === 'Consulta')!
+    expect(node.card).toMatchObject({ reminder_at: at, reminder_repeat: 'week', reminder_doing: true, tags: ['saúde'] })
+    expect(copiedMessage(1)).toBe('Copiado como card')
+    expect(copiedMessage(2, ['video.mp4'])).toBe('Copiados 2 cards. Ficaram de fora: video.mp4')
+  })
+})

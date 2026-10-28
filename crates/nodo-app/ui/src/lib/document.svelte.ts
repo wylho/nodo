@@ -11,6 +11,7 @@ import { mapTheme } from './maptheme'
 import { ui } from './ui.svelte'
 import { recents } from './recents.svelte'
 import { notes } from './notes.svelte'
+import { cardFieldsOf, withImportedFiles } from './cardclip'
 import { emptyMeta, setStatus, type ClipCard, type NoteColor, type ReminderStatus, type RepeatKind } from '@wylho/atrio'
 import { NODE_COLOR_TOKENS, resolveNodeColor } from './palettes'
 import { theme } from './theme.svelte'
@@ -572,6 +573,8 @@ class Document {
     const parent = this._selected ?? this.nodes.find((n) => n.parent === null)?.id
     if (parent === undefined || !cards.length) return
     const before = new Set(this.nodes.map((n) => n.id))
+    // Fotos e arquivos que vieram junto entram no mapa antes (o texto passa a citar o hash novo).
+    cards = await Promise.all(cards.map(withImportedFiles))
     await this.run(() =>
       api.applyEdits(
         cards.map((card) => ({
@@ -580,7 +583,7 @@ class Document {
           text: card.title.trim() || t('Nota'),
           note: card.markdown.trim(),
           color: nodeColorOf(card.color),
-          card: { emoji: card.emoji ?? null, tags: card.tags ?? [] },
+          card: cardFieldsOf(card),
         })),
       ),
     )
@@ -605,13 +608,19 @@ class Document {
     const n = this.node(id)
     if (!n) return null
     const color = noteColorOf(n.color)
-    const { emoji, tags } = n.card ?? {}
+    const c = n.card ?? {}
     return {
       title: n.text,
       markdown: n.note,
       ...(color !== 'none' ? { color } : {}),
-      ...(emoji ? { emoji } : {}),
-      ...(tags?.length ? { tags } : {}),
+      ...(c.emoji ? { emoji: c.emoji } : {}),
+      ...(c.tags?.length ? { tags: c.tags } : {}),
+      // Lembrete e status vão junto (card do Atrio, versão 2).
+      ...(c.reminder_at != null ? { reminderAt: c.reminder_at } : {}),
+      ...(c.reminder_repeat ? { reminderRepeat: c.reminder_repeat as RepeatKind } : {}),
+      ...(c.reminder_done ? { reminderDone: true } : {}),
+      ...(c.reminder_doing ? { reminderDoing: true } : {}),
+      ...(c.status_on ? { statusOn: true } : {}),
     }
   }
 
@@ -620,8 +629,8 @@ class Document {
     const parent = this.selected ?? this.snapshot.nodes.find((n) => n.parent === null)?.id
     if (parent === undefined) return
     const before = new Set(this.snapshot.nodes.map((n) => n.id))
-    const fields = { emoji: card.emoji ?? null, tags: card.tags ?? [] }
-    await this.run(() => api.addTopic(parent, card.title.trim() || t('Nota'), card.markdown.trim(), nodeColorOf(card.color), fields))
+    card = await withImportedFiles(card)
+    await this.run(() => api.addTopic(parent, card.title.trim() || t('Nota'), card.markdown.trim(), nodeColorOf(card.color), cardFieldsOf(card)))
     const id = this.snapshot.nodes.find((n) => !before.has(n.id))?.id
     if (id !== undefined) this.selected = id
   }

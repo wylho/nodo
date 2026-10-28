@@ -19,6 +19,7 @@
   import ExportSheet from './components/ExportSheet.svelte'
   import { backgroundMenu, groupMenu, nodeMenu, type ViewActions } from './lib/mapmenus'
   import { cardsToClipboard, readCards } from '@wylho/atrio'
+  import { citesFiles, copiedMessage, copyCards } from './lib/cardclip'
   import { doc } from './lib/document.svelte'
   import { hasHost, isPreview } from './lib/api'
   import { prefs } from './lib/prefs.svelte'
@@ -54,10 +55,19 @@
     const cards = doc.grouped ? doc.groupCards() : [doc.selectedCard()].filter((c) => c !== null)
     if (!cards.length) return
     e.preventDefault()
+    // Com foto ou arquivo, os bytes vão junto (buscar é assíncrono: a cópia passa pela área de transferência do
+    // sistema); sem anexo, vai na hora, pelo próprio evento.
+    if (citesFiles(cards)) {
+      void copyCards(cards).then(
+        (skipped) => ui.say(copiedMessage(cards.length, skipped)),
+        () => ui.say(t('Não foi possível copiar')),
+      )
+      return
+    }
     const { html, text } = cardsToClipboard(cards)
     e.clipboardData.setData('text/html', html)
     e.clipboardData.setData('text/plain', text)
-    ui.say(cards.length > 1 ? tn(cards.length, 'Copiado como card', 'Copiados {n} cards') : t('Copiado como card'))
+    ui.say(copiedMessage(cards.length))
   }
 
   function onPaste(e: ClipboardEvent) {

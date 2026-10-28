@@ -36,7 +36,8 @@ import { ui } from './ui.svelte'
 import { prefs } from './prefs.svelte'
 import { theme } from './theme.svelte'
 import { notes } from './notes.svelte'
-import { readClipboardCards, writeCards } from '@wylho/atrio'
+import { readClipboardCards } from '@wylho/atrio'
+import { copiedMessage, copyCards } from './cardclip'
 import { resolveNodeColor } from './palettes'
 
 const mac = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform)
@@ -89,8 +90,7 @@ function clipItems(withCopy: boolean): MenuEntry[] {
         const card = doc.selectedCard()
         if (!card) return
         try {
-          await writeCards([card])
-          ui.say(t('Copiado como card'))
+          ui.say(copiedMessage(1, await copyCards([card])))
         } catch {
           ui.say(t('Não foi possível copiar'))
         }
@@ -112,8 +112,7 @@ export function groupMenu(): MenuEntry[] {
       hint: `${mod}C`,
       onSelect: async () => {
         try {
-          await writeCards(doc.groupCards())
-          ui.say(tn(topics, 'Copiado como card', 'Copiados {n} cards'))
+          ui.say(copiedMessage(topics, await copyCards(doc.groupCards())))
         } catch {
           ui.say(t('Não foi possível copiar'))
         }
