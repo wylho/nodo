@@ -458,6 +458,8 @@ mesmo núcleo do aplicativo. Começou inspirado no [Minder](https://github.com/p
   ganha um aviso. Enquanto arrasta, a janela mostra "Solte para abrir" ou "Este arquivo o Nodo não abre"
   (`ui.dropping`, `.drop-hint` em `map.css`). Com um card aberto (ou apresentando) o arquivo continua indo para o card.
   Teste em `tests/lib.test.ts`.
+- **Atrio 0.22.0** (o PDF da nota do Ideario com o card no topo, escolha do usuário): mudou só a impressão do
+  `NoteEditor`; no Nodo, só a tag (o card aberto não imprime).
 - **Próximo:** a exportação desenhar emoji e pílulas do card; anexos e gravações no tópico (precisam de um lugar
   para os arquivos ao lado do `.nodo`); o Ideario usar `CardPills`/`CardDialog` do Atrio no lugar das cópias dele;
   estruturas do XMind que faltam (chaves, linha do tempo, espinha de peixe, matriz, tabela em árvore); aba Estrutura
