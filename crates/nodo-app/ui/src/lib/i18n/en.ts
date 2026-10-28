@@ -328,4 +328,9 @@ export const EN: Record<string, string> = {
   'Nota solta': 'Loose note',
   'Ir ao passo de um tópico': 'Go to a topic’s step',
   'clique': 'click',
+  'O Nodo abre mapas .nodo, Markdown, OPML e .minder': 'Nodo opens .nodo maps, Markdown, OPML and .minder',
+  'Este arquivo o Nodo não abre': 'Nodo can’t open this file',
+  'Solte para abrir {n} arquivos': 'Drop to open {n} files',
+  'Solte para abrir': 'Drop to open',
+  'Cada arquivo abre numa aba': 'Each file opens in a tab',
 }

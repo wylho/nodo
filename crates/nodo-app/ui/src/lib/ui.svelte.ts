@@ -28,6 +28,8 @@ class Ui {
   /** O Espaço está apertado (Espaço + arrastar move o mapa); `spacePanned` diz se moveu, e aí soltar não edita. */
   spaceHeld = $state(false)
   spacePanned = false
+  /** Arquivos arrastados sobre a janela: quantos o Nodo abre (0 = nenhum dos que vêm). Nulo sem arrasto. */
+  dropping = $state<number | null>(null)
   toast = $state<string | null>(null)
   confirmRequest = $state<ConfirmRequest | null>(null)
   private toastTimer: ReturnType<typeof setTimeout> | undefined

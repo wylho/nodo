@@ -993,3 +993,13 @@ describe('apresentação', () => {
     expect(JSON.stringify(doc.snapshot)).toBe(before)
   })
 })
+
+describe('arrastar arquivos para a janela', () => {
+  it('abre os mapas, o Markdown, o OPML e o .minder; deixa de fora o resto', async () => {
+    const { openable } = await import('../src/lib/filedrop')
+    expect(openable(['/a/Mapa.nodo', '/a/lista.MD', '/a/foto.png', '/a/x.opml', 'C:\\b\\velho.minder', '/a/notas.markdown', '/a/t.txt', '/a/sem'])).toEqual([
+      '/a/Mapa.nodo', '/a/lista.MD', '/a/x.opml', 'C:\\b\\velho.minder', '/a/notas.markdown', '/a/t.txt',
+    ])
+    expect(openable(['/a/foto.png', '/a/doc.pdf'])).toEqual([])
+  })
+})

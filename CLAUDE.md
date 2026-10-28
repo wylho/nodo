@@ -452,6 +452,12 @@ mesmo núcleo do aplicativo. Começou inspirado no [Minder](https://github.com/p
   editável gravado no `.nodo`, visão do apresentador na 2ª tela com notas por passo, ponteiro laser, exportar o
   percurso em PDF e o agente montar a apresentação pelo MCP. Hoje o card no passo é o card do mapa ampliado (a prévia:
   a tabela aparece só como resumo e textos longos cortam no limite da prévia).
+- **Arrastar arquivos para a janela** (pedido do usuário: soltar um `.md` não fazia nada): com o mapa à vista, os
+  arquivos que o Abrir aceita (`.nodo`, `.minder`, `.md`, `.markdown`, `.txt`, `.opml`; `lib/filedrop.ts` `openable`)
+  abrem em abas (`App.svelte`: `onDragDropEvent` do Tauri com o caminho; na prévia, o drop do HTML com o nome); o resto
+  ganha um aviso. Enquanto arrasta, a janela mostra "Solte para abrir" ou "Este arquivo o Nodo não abre"
+  (`ui.dropping`, `.drop-hint` em `map.css`). Com um card aberto (ou apresentando) o arquivo continua indo para o card.
+  Teste em `tests/lib.test.ts`.
 - **Próximo:** a exportação desenhar emoji e pílulas do card; anexos e gravações no tópico (precisam de um lugar
   para os arquivos ao lado do `.nodo`); o Ideario usar `CardPills`/`CardDialog` do Atrio no lugar das cópias dele;
   estruturas do XMind que faltam (chaves, linha do tempo, espinha de peixe, matriz, tabela em árvore); aba Estrutura

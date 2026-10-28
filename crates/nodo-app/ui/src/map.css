@@ -369,3 +369,20 @@ kbd {
 .pb-count { padding: 0 10px; font: 600 13px var(--font-body); font-variant-numeric: tabular-nums; color: var(--muted); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .present-bar, .pb-dot { transition: none; } }
+
+/* Arrastando arquivos sobre a janela: a área do mapa mostra que dá para soltar (e o que acontece). */
+.drop-hint {
+  position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; pointer-events: none;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+  background: color-mix(in oklab, var(--accent) 8%, transparent);
+  box-shadow: inset 0 0 0 3px var(--accent);
+}
+.drop-hint.none { background: color-mix(in oklab, var(--muted) 10%, transparent); box-shadow: inset 0 0 0 3px var(--line); }
+.drop-card {
+  display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 360px; padding: 22px 28px; text-align: center;
+  border-radius: 18px; background: var(--surface); border: 1px solid var(--line); box-shadow: var(--shadow); color: var(--fg);
+}
+.drop-card svg { color: var(--accent); }
+.drop-hint.none .drop-card svg { color: var(--muted); }
+.drop-card b { font-size: 17px; }
+.drop-card span { font-size: 14px; color: var(--muted); }

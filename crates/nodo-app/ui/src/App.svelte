@@ -2,7 +2,7 @@
   // Raiz da aplicação, com a casca do Ideario: barra superior, corpo (canvas + inspetor), aviso, confirmação e
   // configurações. Os atalhos globais ficam aqui.
   import { onMount } from 'svelte'
-  import { CircleQuestionMark, Maximize, Minus, Plus } from '@lucide/svelte'
+  import { CircleQuestionMark, FolderOpen, Maximize, Minus, Plus } from '@lucide/svelte'
   import TopBar from './components/TopBar.svelte'
   import Canvas from './components/Canvas.svelte'
   import TabBar from './components/TabBar.svelte'
@@ -10,6 +10,7 @@
   import PresentBar from './components/PresentBar.svelte'
   import { present } from './lib/present.svelte'
   import { startPresentation, stopPresentation } from './lib/presenting'
+  import { openable } from './lib/filedrop'
   import { notes } from './lib/notes.svelte'
   import SettingsSheet from './components/SettingsSheet.svelte'
   import ConfirmDialog from './components/ConfirmDialog.svelte'
@@ -241,9 +242,48 @@
     ui.spacePanned = false
   }
 
+  /** Os arquivos soltos que o Nodo abre viram abas; o resto ganha um aviso. Com um card aberto, eles são anexo dele. */
+  async function openDropped(paths: string[]) {
+    const maps = openable(paths)
+    if (!maps.length) {
+      ui.say(t('O Nodo abre mapas .nodo, Markdown, OPML e .minder'))
+      return
+    }
+    for (const p of maps) await doc.openPath(p)
+  }
+
+  /** Arrastando arquivos sobre a janela, e para onde eles iriam (o card aberto, a apresentação: não para o mapa). */
+  const dropsHere = () => notes.opened === null && notes.openedFree === null && !present.on && !ui.settingsOpen && !ui.confirmRequest
+
+  // Na prévia do navegador o arquivo vem sem caminho: o nome basta para o backend simulado.
+  function onDragOver(e: DragEvent) {
+    if (hasHost || !e.dataTransfer?.types.includes('Files') || !dropsHere()) return
+    e.preventDefault()
+    ui.dropping = openable([...(e.dataTransfer.items ?? [])].map((i) => i.getAsFile()?.name ?? '')).length || 1
+  }
+  function onDrop(e: DragEvent) {
+    if (hasHost || !e.dataTransfer?.files.length || !dropsHere()) return
+    e.preventDefault()
+    ui.dropping = null
+    void openDropped([...e.dataTransfer.files].map((f) => '/' + f.name))
+  }
+
   onMount(() => {
     doc.load()
     if (!hasHost) return
+    // No app, o sistema entrega os arquivos soltos com o caminho (o card aberto escuta os dele em NodeNote.svelte).
+    let stopDrop: (() => void) | undefined
+    void import('@tauri-apps/api/webview').then(async ({ getCurrentWebview }) => {
+      stopDrop = await getCurrentWebview().onDragDropEvent((e) => {
+        const p = e.payload
+        if (p.type === 'leave' || !dropsHere()) ui.dropping = null
+        else if (p.type === 'enter') ui.dropping = openable(p.paths).length
+        else if (p.type === 'drop') {
+          ui.dropping = null
+          if (p.paths.length) void openDropped(p.paths)
+        }
+      })
+    })
     // Fechar (ou Cmd+Q) com alterações não salvas: o núcleo segura e pergunta aqui.
     const unlisten: (() => void)[] = []
     void import('@tauri-apps/api/event').then(async ({ listen }) => {
@@ -251,12 +291,15 @@
       // macOS: um mapa aberto pelo Finder com o app já aberto.
       unlisten.push(await listen<string>('open-file', (e) => void doc.openPath(e.payload)))
     })
-    return () => unlisten.forEach((u) => u())
+    return () => {
+      unlisten.forEach((u) => u())
+      stopDrop?.()
+    }
   })
 </script>
 
 <!-- Ao voltar para a janela, confere se um agente salvou o arquivo pelo MCP. -->
-<svelte:window onkeydown={onKeydown} onkeyup={onKeyup} onblur={() => (ui.spaceHeld = false)} oncopy={onCopy} onpaste={onPaste} onfocus={() => void doc.checkDisk()} />
+<svelte:window ondragover={onDragOver} ondrop={onDrop} ondragleave={(e) => e.relatedTarget === null && (ui.dropping = null)} onkeydown={onKeydown} onkeyup={onKeyup} onblur={() => (ui.spaceHeld = false)} oncopy={onCopy} onpaste={onPaste} onfocus={() => void doc.checkDisk()} />
 
 <div class="shell map-shell" class:presenting={present.on}>
   <TopBar />
@@ -308,6 +351,16 @@
     </div>
   {:else if !hasHost}
     <div class="preview-tag">{t('Rodando fora do app: sem acesso ao documento')}</div>
+  {/if}
+
+  {#if ui.dropping !== null}
+    <div class="drop-hint" class:none={ui.dropping === 0} aria-live="polite">
+      <div class="drop-card">
+        <FolderOpen size={28} />
+        <b>{ui.dropping === 0 ? t('Este arquivo o Nodo não abre') : ui.dropping > 1 ? t('Solte para abrir {n} arquivos', { n: ui.dropping }) : t('Solte para abrir')}</b>
+        <span>{ui.dropping === 0 ? t('O Nodo abre mapas .nodo, Markdown, OPML e .minder') : t('Cada arquivo abre numa aba')}</span>
+      </div>
+    </div>
   {/if}
 
   <div class="toast" class:show={!!ui.toast} role="status" aria-live="polite">
