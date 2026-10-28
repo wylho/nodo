@@ -487,6 +487,11 @@ Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `
   Teste em `tests/lib.test.ts`.
 - **Atrio 0.22.0** (o PDF da nota do Ideario com o card no topo, escolha do usuário): mudou só a impressão do
   `NoteEditor`; no Nodo, só a tag (o card aberto não imprime).
+- **Atrio 0.23.0: sessão do card** (tarefa 02 do roteiro, defeitos 8 e 9 do `UNIFICACAO.md`): fechar o card
+  (`NodeNote.svelte`) passa pela `CardSession` do Atrio: espera a gravação e os arquivos que ainda entram
+  (`settle`), salva (`flush` agora espera os dois salvamentos) e só então some; antes, fechar gravando perdia o áudio.
+  Com um card aberto, os atalhos do mapa, o copiar/colar de tópicos e o Espaço param (`cardOpen()` em `App.svelte`):
+  antes ⌘W fechava a aba, ⌘N criava mapa e ⌘/ recolhia atrás do card.
 - **Próximo** (revisto em 28/10/2026; o roteiro dos três projetos, com estado, está em `atrio/.scratch/roteiro/map.md`):
   fechar o card esperar o `settle()` e os atalhos do mapa pararem com o card aberto (`CardSession` do Atrio, tarefa
   02); área de transferência v2 com lembrete, status e anexos (tarefa 03); Apresentação 2ª versão (tarefa 09);

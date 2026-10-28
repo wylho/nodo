@@ -9,6 +9,7 @@
   import { Trash2 } from '@lucide/svelte'
   import {
     CardDialog,
+    CardSession,
     CardTopBar,
     emptyMeta,
     features,
@@ -149,12 +150,11 @@
     bodyTimer = undefined
   }
 
-  function flush() {
-    if (metaTimer) void saveMeta()
-    if (bodyTimer) void saveBody()
+  async function flush() {
+    await Promise.all([metaTimer && saveMeta(), bodyTimer && saveBody()])
   }
 
-  onDestroy(flush)
+  onDestroy(() => void flush())
 
   // Arquivos soltos do computador sobre a janela, com o card aberto: entram nele (no app, o sistema entrega o caminho).
   $effect(() => {
@@ -174,14 +174,12 @@
     }
   })
 
-  function close() {
-    flush()
-    onclose()
-  }
+  // Fechar espera a gravação e os arquivos que ainda entram (senão o áudio se perdia), salva e só então some.
+  const session = new CardSession({ settle: () => card?.settle(), save: flush, onclose: () => onclose() })
+  const close = () => void session.close()
 
   async function removeTopic() {
-    flush()
-    onclose()
+    if (!(await session.close())) return
     if (free) return void (await doc.removeFreeNote(id))
     doc.selected = id
     await doc.remove()

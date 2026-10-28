@@ -15,7 +15,7 @@
   import SettingsSheet from './components/SettingsSheet.svelte'
   import ConfirmDialog from './components/ConfirmDialog.svelte'
   import UpdateNotice from './components/UpdateNotice.svelte'
-  import { MenuAt, t, tn } from '@wylho/atrio'
+  import { cardOpen, MenuAt, t, tn } from '@wylho/atrio'
   import ExportSheet from './components/ExportSheet.svelte'
   import { backgroundMenu, groupMenu, nodeMenu, type ViewActions } from './lib/mapmenus'
   import { cardsToClipboard, readCards } from '@wylho/atrio'
@@ -49,7 +49,7 @@
   // Copiar e colar um nó como card do Atrio: o Ideario cola como nota, e uma nota copiada no Ideario cola aqui como nó.
   // Num campo de texto, copiar e colar são do campo.
   function onCopy(e: ClipboardEvent) {
-    if (typing(e) || !e.clipboardData) return
+    if (typing(e) || cardOpen() || !e.clipboardData) return
     // Um grupo escolhido vai inteiro, um card por tópico.
     const cards = doc.grouped ? doc.groupCards() : [doc.selectedCard()].filter((c) => c !== null)
     if (!cards.length) return
@@ -61,7 +61,7 @@
   }
 
   function onPaste(e: ClipboardEvent) {
-    if (typing(e)) return
+    if (typing(e) || cardOpen()) return
     const cards = readCards(e.clipboardData)
     if (!cards.length) return
     e.preventDefault()
@@ -88,8 +88,8 @@
 
   function onKeydown(e: KeyboardEvent) {
     if (present.on) return presentKey(e)
-    // Com uma folha ou confirmação aberta, as teclas são dela.
-    if (ui.settingsOpen || ui.confirmRequest) return
+    // Com uma folha, uma confirmação ou um card aberto, as teclas são dele (⌘W não fecha a aba atrás do card).
+    if (ui.settingsOpen || ui.confirmRequest || cardOpen()) return
     const mod = e.metaKey || e.ctrlKey
     const key = e.key.toLowerCase()
 
@@ -238,7 +238,7 @@
     if (e.key !== ' ' || !ui.spaceHeld) return
     ui.spaceHeld = false
     // Soltou sem ter arrastado: é o Espaço de editar o tópico.
-    if (!ui.spacePanned && !typing(e) && !doc.editing && !doc.creating && !ui.settingsOpen && !ui.confirmRequest) doc.startEdit()
+    if (!ui.spacePanned && !typing(e) && !cardOpen() && !doc.editing && !doc.creating && !ui.settingsOpen && !ui.confirmRequest) doc.startEdit()
     ui.spacePanned = false
   }
 
