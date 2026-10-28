@@ -13,6 +13,12 @@ mesmo núcleo do aplicativo. Começou inspirado no [Minder](https://github.com/p
   a mudança se faz no Atrio, sobe a tag e os **dois** apps sobem juntos (nunca deixar um app numa tag velha). Mesmo
   quando o usuário fala de um app só, se o assunto é peça do Atrio, o caminho é o Atrio. Plano em
   `atrio/docs/UNIFICACAO.md`.
+- **Skills do Matt Pocock (pedido do usuário, 28/10/2026): nos três projetos e em todo app novo.** O plugin
+  `mattpocock-skills@claude-plugins-official` fica ligado no `.claude/settings.json` do repositório (toda sessão nova já
+  o tem). Usar as skills dele no trabalho: `tdd`, `diagnosing-bugs`, `code-review`, `to-spec`/`to-tickets`/`triage`,
+  `implement`, `prototype`, `improve-codebase-architecture`, `domain-modeling`, `grill-me`. Elas convivem com as skills
+  do usuário (`rust-testing`, `rust-patterns`, `sync-site`, `atrio-hub`), que valem quando falam de algo mais
+  específico. App novo: copiar o `.claude/settings.json` e o `docs/agents/` do Atrio e pôr aqui o bloco "Agent skills".
 - **Local-first**: o mapa vive num arquivo no disco do usuário. Nada de servidor, conta ou rede para abrir, editar ou salvar.
 - **O arquivo é do usuário**: texto legível sem o app, gravado de forma atômica, ida e volta sem perda. É o `.nodo`
   (JSON, D28); compatibilidade com o Minder original **não** é requisito (D27).
@@ -142,6 +148,24 @@ mesmo núcleo do aplicativo. Começou inspirado no [Minder](https://github.com/p
   desfazer). O `.nodo` em JSON puro da 0.3.0 continua abrindo.
 - **D18:** **o canvas redesenha no máximo uma vez por quadro**, e o que o desenho lê não pode ser `$state` escrito no
   mesmo efeito. Motivo: um laço assim (`colors`) fazia centenas de redesenhos por tecla e deixava a edição travando.
+
+
+## Agent skills
+
+### Issue tracker
+
+Tarefas e especificações em arquivos Markdown dentro do repositório, em `.scratch/<assunto>/` (escolha do usuário),
+e sobem no commit como o resto. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Os cinco estados padrão (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`), numa linha
+`Status:` no topo de cada arquivo. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `CLAUDE.md` ("Decisões tomadas"). See
+`docs/agents/domain.md`.
 
 ## Estado atual
 - **Versão 0.7.1** (28/10/2026, pedido do usuário: "depois que tiver tudo certinho, você pode fazer o release"):
