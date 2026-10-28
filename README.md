@@ -12,7 +12,7 @@
 A free, open-source mind mapping app that opens in an instant, works offline and keeps every map in a file you own,
 readable without the app. And Claude can work on the same map you do, by the same rules. For Windows, macOS and Linux.</p>
 
-<p align="center"><a href="https://github.com/wylho/nodo/releases/latest"><b>Version 0.7.0: present your map, with the camera flying from branch to branch →</b></a></p>
+<p align="center"><a href="https://github.com/wylho/nodo/releases/latest"><b>Version 0.7.1: drag maps, Markdown and OPML onto the window to open them →</b></a></p>
 
 <p align="center">
   <b>Windows · macOS · Linux</b><br>

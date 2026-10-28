@@ -144,6 +144,8 @@ mesmo núcleo do aplicativo. Começou inspirado no [Minder](https://github.com/p
   mesmo efeito. Motivo: um laço assim (`colors`) fazia centenas de redesenhos por tecla e deixava a edição travando.
 
 ## Estado atual
+- **Versão 0.7.1** (28/10/2026, pedido do usuário: "depois que tiver tudo certinho, você pode fazer o release"):
+  arrastar mapas, Markdown e OPML para a janela e o Atrio 0.22.0.
 - **Versão 0.7.0 lançada** (26/10/2026, Release `v0.7.0`, pedido do usuário: "lança a versão"): o modo Apresentação (1ª versão).
 - **Versão 0.6.2 lançada** (25/10/2026, Release `v0.6.2`, pedido do usuário: "lança a versão"): o + das abas abre a tela inicial numa aba em
   branco em vez de criar um mapa.
