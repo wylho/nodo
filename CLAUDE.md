@@ -487,7 +487,8 @@ Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `
   Teste em `tests/lib.test.ts`.
 - **Atrio 0.22.0** (o PDF da nota do Ideario com o card no topo, escolha do usuário): mudou só a impressão do
   `NoteEditor`; no Nodo, só a tag (o card aberto não imprime).
-- **Próximo:** a exportação desenhar emoji e pílulas do card; anexos e gravações no tópico (precisam de um lugar
-  para os arquivos ao lado do `.nodo`); o Ideario usar `CardPills`/`CardDialog` do Atrio no lugar das cópias dele;
-  estruturas do XMind que faltam (chaves, linha do tempo, espinha de peixe, matriz, tabela em árvore); aba Estrutura
-  na barra lateral com colar lista; abrir `.xmind`.
+- **Próximo** (revisto em 28/10/2026; o roteiro dos três projetos, com estado, está em `atrio/.scratch/roteiro/map.md`):
+  fechar o card esperar o `settle()` e os atalhos do mapa pararem com o card aberto (`CardSession` do Atrio, tarefa
+  02); área de transferência v2 com lembrete, status e anexos (tarefa 03); Apresentação 2ª versão (tarefa 09);
+  espinha de peixe, chaves e abrir `.xmind` (tarefa 10). Já feitos e fora da lista: exportar desenhar o card
+  (`lib/domcard.ts`), anexos no tópico (D30), linha do tempo, matriz e tabela em árvore.
