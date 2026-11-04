@@ -508,6 +508,9 @@ Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `
   `import_file` lê `x-tab`), e a camada `api.ts` manda a aba da janela em toda chamada; a janela do card não mede nem
   troca o título do mapa. Toda edição avisa as outras janelas (`map-changed`) e elas leem o mapa de novo
   (`doc.refresh`). Só a janela principal pergunta antes de fechar com algo não salvo. Capabilities para `card-*`.
+- **Atrio 0.26.3**: o `vite.config.ts` usa o `atrioOptimizeDeps()` de `@wylho/atrio/vite` (o Atrio fora do
+  pré-empacotamento, o editor dele inteiro dentro, numa leva só), o mesmo do Ideario: no dev, uma cópia só do
+  ProseMirror.
 - **Próximo** (revisto em 28/10/2026; o roteiro dos três projetos, com estado, está em `atrio/.scratch/roteiro/map.md`):
   Apresentação 2ª versão (tarefa 09);
   espinha de peixe, chaves e abrir `.xmind` (tarefa 10). Já feitos e fora da lista: exportar desenhar o card
