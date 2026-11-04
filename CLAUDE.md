@@ -169,6 +169,9 @@ Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `
 `docs/agents/domain.md`.
 
 ## Estado atual
+- **Versão 0.8.0 lançada** (04/11/2026, Release `v0.8.0`, pedido do usuário: "pode fazer o release dos dois apps"): prompt,
+  link na palavra, card numa nova janela e card na área de transferência v2 (Atrio 0.26.3). Site e README na 0.8.0 com
+  o print do card aberto (`card.webp`/`card-escuro.webp`).
 - **Versão 0.7.1 lançada** (28/10/2026, Release `v0.7.1`, pedido do usuário: "depois que tiver tudo certinho, você pode fazer o release"):
   arrastar mapas, Markdown e OPML para a janela e o Atrio 0.22.0.
 - **Versão 0.7.0 lançada** (26/10/2026, Release `v0.7.0`, pedido do usuário: "lança a versão"): o modo Apresentação (1ª versão).
