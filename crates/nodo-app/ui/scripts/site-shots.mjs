@@ -1,14 +1,15 @@
 // Prints do app para o site, tirados da prévia no navegador com o mapa de exemplo de src/lib/preview.ts, que é
 // inventado (o repositório é público). Em inglês em site/img (a página principal) e em português em site/img/pt.
 // Regra do usuário: a tela cheia de cards, nunca um app vazio; no recorte de celular, zoom nos cards.
-//   pnpm build && pnpm site-shots
+//   pnpm build && pnpm site-shots          (ONLY=card,card-escuro tira só esses; PORT muda a porta da prévia)
 // Chromium: o do Playwright, ou CHROMIUM=/caminho/do/chrome.
 import { spawn, execFileSync } from 'node:child_process'
 import { mkdirSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
 
-const PORT = 4189
+const PORT = Number(process.env.PORT) || 4189
+const ONLY = process.env.ONLY ? process.env.ONLY.split(',') : null
 const IMG = fileURLToPath(new URL('../../../../site/img', import.meta.url))
 let OUT = IMG
 let LOCALE = 'en'
@@ -32,6 +33,7 @@ function webp(png, name) {
 }
 
 async function shot(browser, name, { width = 1440, height = 900, scale = 2, dark = false, lines = 'curved', query = '' }, act) {
+  if (ONLY && !ONLY.includes(name)) return
   const ctx = await browser.newContext({
     viewport: { width, height },
     deviceScaleFactor: scale,
@@ -85,6 +87,51 @@ try {
       // A seção do Claude no alto da folha (a lista de atalhos vem depois dela).
       await page.locator('.sheet h3', { hasText: /^Claude$/ }).evaluate((el) => el.scrollIntoView({ block: 'start' }))
     })
+    // O card aberto com um prompt (em laranja, entre colchetes) e links nas palavras, que formam a lista "Links".
+    const openCard = async (page) => {
+      await page.keyboard.press('Control+Enter')
+      // Espera a nota do tópico chegar ao editor (senão ela chega depois e apaga o que pusermos).
+      await page.waitForFunction(() => (document.querySelector('.ProseMirror')?.textContent ?? '').trim().length > 0)
+      await sleep(400)
+      const link = (text, href) => ({ type: 'text', text, marks: [{ type: 'link', attrs: { href } }] })
+      const txt = (text) => ({ type: 'text', text })
+      const p = (...content) => ({ type: 'paragraph', content })
+      const task = (checked, ...content) => ({ type: 'taskItem', attrs: { checked }, content: [p(...content)] })
+      const doc = {
+        type: 'doc',
+        content: [
+          p(txt(L('Dezessete ferramentas, o mesmo desfazer da janela.', 'Seventeen tools, the same undo as the window.'))),
+          p(
+            txt(L('Guia para a beta. ', 'Guide for the beta. ')),
+            { type: 'text', text: L('Transforme a lista abaixo num guia curto, com um exemplo por ferramenta', 'Turn the list below into a short guide, with one example per tool'), marks: [{ type: 'prompt' }] },
+          ),
+          {
+            type: 'taskList',
+            content: [
+              task(true, txt(L('Ler a ', 'Read the ')), link(L('especificação do MCP', 'MCP specification'), 'https://modelcontextprotocol.io')),
+              task(false, txt(L('Testar no ', 'Try it in ')), link('Claude Desktop', 'https://claude.ai/download')),
+              pt
+                ? task(false, txt('Comparar com o servidor do '), link('Ideario', 'https://ideario.pages.dev'))
+                : task(false, txt('Compare with the '), link('Ideario', 'https://ideario.pages.dev'), txt(' server')),
+            ],
+          },
+        ],
+      }
+      await page.locator('.ProseMirror').evaluate((el, d) => {
+        const ed = el.editor
+        ed.commands.setContent(d)
+        // O cursor dentro do prompt: o botão ✦ da barra aparece ligado.
+        let at = 0
+        ed.state.doc.descendants((n, pos) => {
+          if (!at && n.isText && n.marks.some((m) => m.type.name === 'prompt')) at = pos + 8
+        })
+        ed.commands.setTextSelection(at)
+        ed.commands.focus()
+      }, doc)
+      await sleep(400)
+    }
+    await shot(browser, 'card', { query: `&select=${mcp}` }, openCard)
+    await shot(browser, 'card-escuro', { dark: true, query: `&select=${mcp}` }, openCard)
     // Celular: zoom no card da Construção, com os vizinhos em volta (nada de mapa miúdo).
     const build = encodeURIComponent(L('Construção', 'Build'))
     await shot(browser, 'janela-estreita', { width: 390, height: 844, scale: 3, dark: true, query: `&select=${build}` }, async (page) => {

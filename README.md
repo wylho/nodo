@@ -12,7 +12,7 @@
 A free, open-source mind mapping app that opens in an instant, works offline and keeps every map in a file you own,
 readable without the app. And Claude can work on the same map you do, by the same rules. For Windows, macOS and Linux.</p>
 
-<p align="center"><a href="https://github.com/wylho/nodo/releases/latest"><b>Version 0.7.1: drag maps, Markdown and OPML onto the window to open them →</b></a></p>
+<p align="center"><a href="https://github.com/wylho/nodo/releases/latest"><b>Version 0.8.0: prompts for Claude, links on words and cards in their own window →</b></a></p>
 
 <p align="center">
   <b>Windows · macOS · Linux</b><br>
@@ -53,6 +53,20 @@ as one made by hand, and it can undo what it did.
 
 <img src="site/img/claude.webp" alt="Nodo settings with appearance, line style and the Claude section, with the Connect button and the Claude Code command">
 
+### Prompts inside your notes
+
+Mark part of a topic’s note as a prompt, with the ✦ button or Ctrl+Shift+P: an instruction for the AI, shown in orange
+between brackets. When Claude works on the map, it reads the prompt and follows it.
+
+- Links on words: select a word and press Ctrl+K; Ctrl+click opens it
+- Every link in the note is listed under Links at the end of the open card
+- Open a card in a new window, next to the map: what you write there shows up on the map right away
+
+<picture>
+  <source srcset="site/img/card-escuro.webp" media="(prefers-color-scheme: dark)">
+  <img src="site/img/card.webp" alt="A topic card open over the mind map, with a prompt for Claude in orange between brackets, a checklist with links on words and the Links list at the end">
+</picture>
+
 ## The file is yours
 
 Every map is a `.nodo` file: a zip with the map as readable JSON plus its attachments, which you can open without the
@@ -87,7 +101,7 @@ Switch the whole map’s structure in one click, and move your ideas in and out 
 |---|---|
 | **Seven structures** | Mind map, logic chart, org chart, tree, matrix, tree table and timeline, with compact, normal or wide spacing. The structure is saved in the map and can be undone. |
 | **Markdown and OPML import and export** | Open Markdown, OPML and Minder files as new maps. Export to PNG, SVG, a print-ready PDF, Markdown or OPML. |
-| **Every topic is a card** | A Markdown note, tags, an emoji, a reminder, a three-color status, photos and attachments. Copy a card into Ideario, or paste one from it. |
+| **Every topic is a card** | A Markdown note, tags, an emoji, a reminder, a three-color status, photos and attachments. Copy a card into Ideario, or paste one from it: the reminder, status, photos and files go along (up to 25 MB). |
 | **Several maps in tabs** | Keep many maps open at once and switch with Ctrl+Tab. Closing one with unsaved changes asks before it goes. |
 
 ## Download

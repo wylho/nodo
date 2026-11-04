@@ -12,7 +12,7 @@
 Um app de mapas mentais grátis e de código aberto que abre num instante, funciona sem internet e guarda cada mapa num arquivo seu,
 legível sem o app. E o Claude pode trabalhar no mesmo mapa que você, pelas mesmas regras.</p>
 
-<p align="center"><a href="https://github.com/wylho/nodo/releases/latest"><b>Versão 0.7.1: arraste mapas, Markdown e OPML para a janela para abrir →</b></a></p>
+<p align="center"><a href="https://github.com/wylho/nodo/releases/latest"><b>Versão 0.8.0: prompts para o Claude, links nas palavras e o card numa janela só dele →</b></a></p>
 
 <p align="center">
   <b>Windows · macOS · Linux</b><br>
@@ -53,6 +53,20 @@ o que fez.
 
 <img src="site/img/pt/claude.webp" alt="Configurações do Nodo com a aparência, o traçado das linhas e a seção Claude, com o botão Ligar e o comando do Claude Code">
 
+### Prompts dentro das notas
+
+Marque um trecho da nota de um tópico como prompt, com o botão ✦ ou Ctrl+Shift+P: uma instrução para a IA, em laranja e
+entre colchetes. Quando o Claude trabalha no mapa, ele lê o prompt e segue.
+
+- Link na palavra: escolha uma palavra e aperte Ctrl+K; Ctrl+clique abre
+- Todos os links da nota aparecem na lista Links, no fim do card aberto
+- Abra um card numa nova janela, ao lado do mapa: o que você escreve lá aparece no mapa na hora
+
+<picture>
+  <source srcset="site/img/pt/card-escuro.webp" media="(prefers-color-scheme: dark)">
+  <img src="site/img/pt/card.webp" alt="O card de um tópico aberto sobre o mapa mental, com um prompt para o Claude em laranja entre colchetes, um checklist com links nas palavras e a lista Links no fim">
+</picture>
+
 ## O arquivo é seu
 
 Cada mapa é um arquivo `.nodo`: um zip com o mapa em JSON legível e os anexos, que abre sem o app. Salvar nunca deixa
@@ -85,7 +99,7 @@ Troque a estrutura do mapa inteiro com um clique, e leve suas ideias para dentro
 |---|---|
 | **Sete estruturas** | Mapa mental, diagrama lógico, organograma, árvore, matriz, tabela em árvore e linha do tempo, com espaçamento compacto, normal ou largo. A estrutura fica salva no mapa e se desfaz. |
 | **Importa e exporta Markdown e OPML** | Abra arquivos Markdown, OPML e do Minder como mapa novo. Exporte em PNG, SVG, PDF para imprimir, Markdown ou OPML. |
-| **Cada tópico é um card** | Nota em Markdown, etiquetas, emoji, lembrete, status em três cores, fotos e anexos. Copie um card para o Ideario, ou cole um que veio de lá. |
+| **Cada tópico é um card** | Nota em Markdown, etiquetas, emoji, lembrete, status em três cores, fotos e anexos. Copie um card para o Ideario, ou cole um que veio de lá: lembrete, status, fotos e arquivos vão junto (até 25 MB). |
 | **Vários mapas em abas** | Deixe vários mapas abertos e troque com Ctrl+Tab. Fechar um com algo por salvar pergunta antes. |
 
 ## Baixar

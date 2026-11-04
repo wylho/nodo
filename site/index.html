@@ -70,7 +70,8 @@
   "screenshot": [
     "https://nodo-1c7.pages.dev/img/mapa.webp",
     "https://nodo-1c7.pages.dev/img/temas.webp",
-    "https://nodo-1c7.pages.dev/img/claude.webp"
+    "https://nodo-1c7.pages.dev/img/claude.webp",
+    "https://nodo-1c7.pages.dev/img/card.webp"
   ],
   "featureList": [
     "Mind map, logic chart, org chart, tree, matrix, tree table and timeline structures",
@@ -78,6 +79,9 @@
     "Markdown and OPML import and export",
     "Export to PNG, SVG and PDF",
     "Built-in MCP server so Claude can read and edit your maps",
+    "Prompts for Claude and links on words inside each topic’s card",
+    "Open a topic’s card in its own window",
+    "Copy and paste cards with Ideario, with reminder, status, photos and files",
     "Six map themes, light and dark mode"
   ],
   "author": {
@@ -119,7 +123,7 @@
       <a class="btn primary" href="#download"><svg class="lucide" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/></svg>Download free</a>
       <a class="btn soft" href="https://github.com/wylho/nodo"><svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true"><path fill="currentColor" d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg>View on GitHub</a>
     </div>
-    <p class="fine">Free and open source · <a href="https://github.com/wylho/nodo/releases/latest">Version 0.7.1: drag maps, Markdown and OPML onto the window to open them<svg class="lucide" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></p>
+    <p class="fine">Free and open source · <a href="https://github.com/wylho/nodo/releases/latest">Version 0.8.0: prompts for Claude, links on words and cards in their own window<svg class="lucide" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></a></p>
   </div>
 </section>
 
@@ -169,6 +173,19 @@
         </div>
         <div class="media"><img src="/img/claude.webp" width="2880" height="1800" loading="lazy" alt="Nodo settings with appearance, line style and the Claude section, with the Connect button and the Claude Code command"></div>
       </div>
+      <div class="card wide">
+        <div>
+          <h3>Prompts inside your notes</h3>
+          <p>Mark part of a topic’s note as a prompt, with the ✦ button or Ctrl+Shift+P: an instruction for the AI,
+          shown in orange between brackets. When Claude works on the map, it reads the prompt and follows it.</p>
+          <ul>
+            <li>Links on words: select a word and press Ctrl+K; Ctrl+click opens it</li>
+            <li>Every link in the note is listed under Links at the end of the open card</li>
+            <li>Open a card in a new window, next to the map: what you write there shows up on the map right away</li>
+          </ul>
+        </div>
+        <div class="media"><picture><source srcset="/img/card-escuro.webp" media="(prefers-color-scheme: dark)"><img src="/img/card.webp" width="2880" height="1800" loading="lazy" alt="A topic card open over the mind map, with a prompt for Claude in orange between brackets, a checklist with links on words and the Links list at the end"></picture></div>
+      </div>
     </div>
   </div>
 </section>
@@ -212,7 +229,7 @@
     <div class="grid four">
       <div class="box"><span class="ico"><svg class="lucide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></svg></span><h3>Seven structures</h3><p>Mind map, logic chart, org chart, tree, matrix, tree table and timeline, with compact, normal or wide spacing. The structure is saved in the map and can be undone.</p></div>
       <div class="box"><span class="ico"><svg class="lucide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/></svg></span><h3>Markdown and OPML import and export</h3><p>Open Markdown, OPML and Minder files as new maps. Export to PNG, SVG, a print-ready PDF, Markdown or OPML.</p></div>
-      <div class="box"><span class="ico"><svg class="lucide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></svg></span><h3>Every topic is a card</h3><p>A Markdown note, tags, an emoji, a reminder, a three-color status, photos and attachments. Copy a card into Ideario, or paste one from it.</p></div>
+      <div class="box"><span class="ico"><svg class="lucide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8Z"/><path d="M15 3v4a2 2 0 0 0 2 2h4"/></svg></span><h3>Every topic is a card</h3><p>A Markdown note, tags, an emoji, a reminder, a three-color status, photos and attachments. Copy a card into Ideario, or paste one from it: the reminder, status, photos and files go along (up to 25 MB).</p></div>
       <div class="box"><span class="ico"><svg class="lucide" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/></svg></span><h3>Several maps in tabs</h3><p>Keep many maps open at once and switch with Ctrl+Tab. Closing one with unsaved changes asks before it goes.</p></div>
     </div>
 
