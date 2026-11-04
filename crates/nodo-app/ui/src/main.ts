@@ -5,6 +5,8 @@ import { addMessages } from '@wylho/atrio'
 import { EN } from './lib/i18n/en'
 import './lib/theme.svelte' // instancia o tema e aplica as variáveis antes da primeira pintura
 import App from './App.svelte'
+import CardWindow from './components/CardWindow.svelte'
+import { cardWindow } from './lib/cardwindow'
 
 // Um app, não um site: sem o menu do navegador (Voltar, Recarregar, Inspecionar), como no Ideario.
 // Campos de texto mantêm o menu nativo (copiar, colar, corretor ortográfico).
@@ -19,7 +21,8 @@ addMessages('en', EN)
 const target = document.getElementById('app')
 if (!target) throw new Error('#app não encontrado no documento')
 
-export default mount(App, { target })
+// A janela de um card ("Abrir em nova janela") mostra só o card.
+export default cardWindow ? mount(CardWindow, { target }) : mount(App, { target })
 
 // macOS (como no Ideario): a barra do app é a barra de título. Em tela cheia o sistema esconde os botões da janela e o
 // espaço guardado para eles some junto; a largura desse espaço é medida no AppKit, porque muda entre versões.

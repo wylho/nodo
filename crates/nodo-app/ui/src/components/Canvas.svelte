@@ -7,7 +7,8 @@
   import { CARD, isCard, summaryOf } from '../lib/cardtext'
   import { attachments } from '../lib/api'
   import { ContextMenu, NoteCard as Card, nearestNoteColor, SEP, t, type MenuEntry, type NoteColor } from '@wylho/atrio'
-  import { BookOpen, Trash2 } from '@lucide/svelte'
+  import { AppWindow, BookOpen, Trash2 } from '@lucide/svelte'
+  import { canOpenWindows, openCardWindow } from '../lib/cardwindow'
   import { notes } from '../lib/notes.svelte'
   import NodeNote from './NodeNote.svelte'
   import { prefs } from '../lib/prefs.svelte'
@@ -666,6 +667,9 @@
     if (doc.pickedNotes.has(id) && doc.grouped) return groupMenu()
     return [
       { label: t('Abrir nota'), icon: BookOpen, onSelect: () => notes.showFree(id) },
+      ...(canOpenWindows && doc.snapshot.active != null
+        ? [{ label: t('Abrir em nova janela'), icon: AppWindow, onSelect: () => void openCardWindow({ kind: 'free', id }, doc.snapshot.active!, doc.freeNote(id)?.title ?? '') }]
+        : []),
       SEP,
       { label: t('Apagar nota'), icon: Trash2, danger: true, onSelect: () => void doc.removeFreeNote(id) },
     ]

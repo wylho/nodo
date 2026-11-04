@@ -25,8 +25,14 @@
   import { doc, nodeColorOf, noteColorOf } from '../lib/document.svelte'
   import { openLink } from '../lib/markdown'
   import { notes, type NoteRef } from '../lib/notes.svelte'
+  import { canOpenWindows, openCardWindow } from '../lib/cardwindow'
 
-  let { target, autofocus = false, onclose }: { target: NoteRef; autofocus?: boolean; onclose: () => void } = $props()
+  let {
+    target,
+    autofocus = false,
+    windowed = false,
+    onclose,
+  }: { target: NoteRef; autofocus?: boolean; /** Numa janela só dele ("Abrir em nova janela"). */ windowed?: boolean; onclose: () => void } = $props()
 
   // Fotos, arquivos, câmera e gravador entram no `.nodo` (um zip com os anexos). Categoria é só do Ideario; a prévia
   // de link fica desligada até o usuário decidir sobre buscar a página na internet.
@@ -178,6 +184,13 @@
   const session = new CardSession({ settle: () => card?.settle(), save: flush, onclose: () => onclose() })
   const close = () => void session.close()
 
+  /** "Abrir em nova janela": salva e fecha aqui, e o card abre numa janela só dele (na aba deste mapa). */
+  async function inWindow() {
+    const tab = doc.snapshot.active
+    if (tab == null || !(await session.close())) return
+    void openCardWindow(target, tab, meta.title)
+  }
+
   async function removeTopic() {
     if (!(await session.close())) return
     if (free) return void (await doc.removeFreeNote(id))
@@ -209,7 +222,7 @@
   }
 </script>
 
-<CardDialog color={meta.color} doc={notes.docMode && wide} onclose={close}>
+<CardDialog color={meta.color} doc={notes.docMode && wide} window={windowed} onclose={close}>
   {#if content}
     <NoteEditor
       bind:this={card}
@@ -227,6 +240,7 @@
           {meta}
           {card}
           onback={close}
+          onwindow={canOpenWindows && doc.snapshot.active != null ? () => void inWindow() : undefined}
           backLabel={t('Voltar ao mapa')}
           {wide}
           docMode={notes.docMode}

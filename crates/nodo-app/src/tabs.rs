@@ -39,6 +39,15 @@ impl Tabs {
             .and_then(|t| t.editor.as_mut())
     }
 
+    /// The map in a tab, by its id (a card's window keeps to the tab it came from).
+    pub fn get(&self, id: u64) -> Option<&Editor> {
+        self.list.iter().find(|t| t.id == id)?.editor.as_ref()
+    }
+
+    pub fn get_mut(&mut self, id: u64) -> Option<&mut Editor> {
+        self.list.iter_mut().find(|t| t.id == id)?.editor.as_mut()
+    }
+
     /// The id of the tab in front.
     pub fn active_id(&self) -> Option<u64> {
         self.list.get(self.active).map(|t| t.id)
@@ -185,6 +194,21 @@ mod tests {
         assert_ne!(a, b);
         assert_eq!(t.active_id(), Some(b));
         assert_eq!(titles(&t), ["A", "B"]);
+    }
+
+    #[test]
+    fn a_card_window_reaches_its_own_tab_even_with_another_in_front() {
+        let mut t = Tabs::default();
+        let a = t.add(Editor::new("A"));
+        let b = t.add(Editor::new("B"));
+        assert_eq!(t.active_id(), Some(b));
+        assert_eq!(t.get(a).map(|e| e.map().root.text.as_str()), Some("A"));
+        assert!(t.get_mut(a).is_some());
+        t.close(a);
+        assert!(
+            t.get(a).is_none(),
+            "fechada a aba, a janela do card não acha mais o mapa"
+        );
     }
 
     #[test]

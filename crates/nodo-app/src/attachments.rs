@@ -12,7 +12,7 @@ use nodo_core::attachments::{Attachment, Data};
 use tauri::http::{header, Request, Response, StatusCode};
 use tauri::{Manager, State};
 
-use crate::{editor, lock, AppState};
+use crate::{editor_in, lock, AppState};
 
 /// The last attachment served, whole, by hash.
 #[derive(Default)]
@@ -40,13 +40,23 @@ pub fn import_file(
         .and_then(|v| v.to_str().ok())
         .map(percent_decode)
         .unwrap_or_else(|| "anexo".to_string());
+    // A janela de um card diz a aba dele em `x-tab`.
+    let tab = request
+        .headers()
+        .get("x-tab")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|v| v.parse().ok());
     let mut doc = lock(&state)?;
-    Ok(editor(&mut doc)?.add_attachment(&name, bytes.clone(), now()))
+    Ok(editor_in(&mut doc, tab)?.add_attachment(&name, bytes.clone(), now()))
 }
 
 /// A file by its path on disk (dropped on the window).
 #[tauri::command]
-pub fn import_path(state: State<'_, AppState>, path: String) -> Result<Attachment, String> {
+pub fn import_path(
+    state: State<'_, AppState>,
+    tab: Option<u64>,
+    path: String,
+) -> Result<Attachment, String> {
     let p = Path::new(&path);
     let bytes = std::fs::read(p).map_err(|e| format!("não foi possível ler {path}: {e}"))?;
     let name = p
@@ -54,17 +64,18 @@ pub fn import_path(state: State<'_, AppState>, path: String) -> Result<Attachmen
         .map(|n| n.to_string_lossy().into_owned())
         .unwrap_or_else(|| "anexo".to_string());
     let mut doc = lock(&state)?;
-    Ok(editor(&mut doc)?.add_attachment(&name, bytes, now()))
+    Ok(editor_in(&mut doc, tab)?.add_attachment(&name, bytes, now()))
 }
 
 /// The attachments with these hashes in the map in front.
 #[tauri::command]
 pub fn get_attachments(
     state: State<'_, AppState>,
+    tab: Option<u64>,
     hashes: Vec<String>,
 ) -> Result<Vec<Attachment>, String> {
     let mut doc = lock(&state)?;
-    Ok(editor(&mut doc)?
+    Ok(editor_in(&mut doc, tab)?
         .attachments()
         .list(hashes.iter().map(String::as_str)))
 }

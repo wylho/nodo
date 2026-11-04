@@ -12,6 +12,7 @@ import { ui } from './ui.svelte'
 import { recents } from './recents.svelte'
 import { notes } from './notes.svelte'
 import { cardFieldsOf, withImportedFiles } from './cardclip'
+import { cardWindow, onOtherWindowChange } from './cardwindow'
 import { emptyMeta, setStatus, type ClipCard, type NoteColor, type ReminderStatus, type RepeatKind } from '@wylho/atrio'
 import { NODE_COLOR_TOKENS, resolveNodeColor } from './palettes'
 import { theme } from './theme.svelte'
@@ -120,6 +121,8 @@ class Document {
   /** Aplica um snapshot novo e reenvia as medições. */
   private async adopt(next: Snapshot) {
     this.snapshot = next
+    // A janela de um card só mostra o card: o título é o do card, e medir o mapa é da janela principal.
+    if (cardWindow) return
     this.syncTitle()
     // Sempre há um nó selecionado quando há mapa: dá para começar a digitar sem clicar antes.
     if (this.picked.size || this.pickedNotes.size) {
@@ -193,8 +196,18 @@ class Document {
     }
   }
 
+  /** Outra janela (a de um card, ou a principal) mudou o mapa: lê de novo. */
+  async refresh() {
+    try {
+      await this.adopt(await api.snapshot())
+    } catch (e) {
+      console.error(e)
+    }
+  }
+
   async load() {
     if (!hasHost && !isPreview) return
+    void onOtherWindowChange(() => void this.refresh())
     try {
       const snap = await api.snapshot()
       // Sem arquivo para abrir, o app começa na tela inicial (Novo, Abrir e os recentes), não num mapa vazio.

@@ -27,6 +27,7 @@ import {
   CircleDot,
   Network,
   ZoomIn,
+  AppWindow,
 } from '@lucide/svelte'
 import { SPACINGS, STRUCTURES, spacingOf, structureOf } from './structures'
 import type { MenuEntry } from '@wylho/atrio'
@@ -38,6 +39,7 @@ import { theme } from './theme.svelte'
 import { notes } from './notes.svelte'
 import { readClipboardCards } from '@wylho/atrio'
 import { copiedMessage, copyCards } from './cardclip'
+import { canOpenWindows, openCardWindow } from './cardwindow'
 import { resolveNodeColor } from './palettes'
 
 const mac = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform)
@@ -172,6 +174,9 @@ export function nodeMenu(id: number, view: ViewActions): MenuEntry[] {
     1,
     0,
     { label: t('Abrir card'), icon: StickyNote, hint: `${mod}↵`, onSelect: () => notes.show(id, !n.note.trim()) },
+    ...(canOpenWindows && doc.snapshot.active != null
+      ? [{ label: t('Abrir em nova janela'), icon: AppWindow, onSelect: () => void openCardWindow({ kind: 'node', id }, doc.snapshot.active!, n.text) }]
+      : []),
   )
   if (!isRoot) items.push({ label: t('Adicionar irmão'), icon: CornerDownRight, hint: 'Enter', onSelect: () => void doc.addSibling() })
   items.push(SEP)

@@ -261,7 +261,22 @@ fn read_items(markdown: &str) -> Vec<Item> {
 fn plain_title(line: &str) -> String {
     fn collect(v: &serde_json::Value, out: &mut String) {
         match v.get("type").and_then(|t| t.as_str()) {
-            Some("text") => out.push_str(v.get("text").and_then(|t| t.as_str()).unwrap_or("")),
+            Some("text") => {
+                let text = v.get("text").and_then(|t| t.as_str()).unwrap_or("");
+                out.push_str(text);
+                // O título é texto puro: o link fica escrito depois da palavra, "texto (endereço)".
+                let href = v
+                    .get("marks")
+                    .and_then(|m| m.as_array())
+                    .into_iter()
+                    .flatten()
+                    .find(|m| m.get("type").and_then(|t| t.as_str()) == Some("link"))
+                    .and_then(|m| m.pointer("/attrs/href"))
+                    .and_then(|h| h.as_str());
+                if let Some(href) = href.filter(|h| *h != text) {
+                    out.push_str(&format!(" ({href})"));
+                }
+            }
             Some("hardBreak") => out.push(' '),
             _ => {}
         }

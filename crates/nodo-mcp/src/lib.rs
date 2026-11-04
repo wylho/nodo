@@ -172,7 +172,11 @@ with children, and branches drawn either side of the root. Every node has a \
 title (its text) and an optional Markdown note. Titles are plain text with no \
 formatting: Markdown in a title (**bold**, # heading, [link](url), lists) is not \
 rendered and shows as typed, so write titles as plain words and put anything \
-formatted in the note. Loose notes can also sit on the canvas itself, \
+formatted in the note. In a note, `<prompt>…</prompt>` in the middle of the \
+text is a prompt: an instruction from the user to the AI about that part of the \
+note (what to do, how to answer); read and follow it when working on the note, \
+and keep the tags when rewriting it. Links can sit on a word: [word](url). \
+Loose notes can also sit on the canvas itself, \
 apart from any node (add_free_note, set_free_note, remove_free_note).
 
 Read the map with get_map or map_stats first. Prefer the targeted tools \

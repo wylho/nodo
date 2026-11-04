@@ -498,6 +498,16 @@ Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `
   `cardFieldsOf`); com anexo, o ⌘C passa pela área de transferência do sistema (buscar os bytes é assíncrono), sem
   anexo continua pelo próprio evento. Colar (`pasteCard`/`pasteCards`) importa os arquivos no `.nodo` antes e grava
   lembrete e status no tópico. Teste em `tests/lib.test.ts`.
+- **Atrio 0.26.2: prompt, link na palavra e card numa nova janela** (pedido do usuário, spec em
+  `atrio/.scratch/prompt-links-janela/`). Prompt e link vêm do card do Atrio; a prévia do tópico já sai com os
+  pedaços (`card_view` pelo `atrio::projection`). O MCP explica o `<prompt>` (`nodo-mcp/src/lib.rs`); o título
+  importado de Markdown continua "texto (endereço)" (`import.rs` `plain_title`). **Nova janela**
+  (`lib/cardwindow.ts`, `components/CardWindow.svelte`): "Abrir em nova janela" no menu do tópico, no da nota solta e
+  na barra do card aberto; a janela `card-<aba>-<tipo>-<id>` carrega `?card=node-<id>&tab=<aba>` e mostra só o card.
+  Os comandos do card aceitam `tab` (`snapshot_in`, `editor_in`, `mutate_in` em `src/lib.rs`; `Tabs::get`/`get_mut`;
+  `import_file` lê `x-tab`), e a camada `api.ts` manda a aba da janela em toda chamada; a janela do card não mede nem
+  troca o título do mapa. Toda edição avisa as outras janelas (`map-changed`) e elas leem o mapa de novo
+  (`doc.refresh`). Só a janela principal pergunta antes de fechar com algo não salvo. Capabilities para `card-*`.
 - **Próximo** (revisto em 28/10/2026; o roteiro dos três projetos, com estado, está em `atrio/.scratch/roteiro/map.md`):
   Apresentação 2ª versão (tarefa 09);
   espinha de peixe, chaves e abrir `.xmind` (tarefa 10). Já feitos e fora da lista: exportar desenhar o card

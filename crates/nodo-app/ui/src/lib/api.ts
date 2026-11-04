@@ -6,6 +6,7 @@
 
 import { convertFileSrc, invoke as tauriInvoke } from '@tauri-apps/api/core'
 import type { Attachment, PreviewBlock } from '@wylho/atrio'
+import { announceChange, cardWindow } from './cardwindow'
 
 /** Um nó achatado, com geometria absoluta, pronto para desenhar. */
 export interface FlatNode {
@@ -175,7 +176,11 @@ async function previewCall<T>(cmd: string, args?: Record<string, unknown>): Prom
 async function call<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
   if (isPreview) return previewCall<T>(cmd, args)
   if (!hasHost) throw new Error(`comando ${cmd} indisponível fora do Tauri`)
-  return tauriInvoke<T>(cmd, args)
+  // A janela de um card fala sempre com a aba dele (os comandos que não usam `tab` o ignoram).
+  const out = await tauriInvoke<T>(cmd, cardWindow ? { ...args, tab: cardWindow.tab } : args)
+  // Mudou o mapa (todo comando que edita devolve o mapa): as outras janelas leem de novo.
+  if (cmd !== 'get_snapshot' && out && typeof out === 'object' && 'nodes' in out) void announceChange()
+  return out
 }
 
 /** O que o núcleo guarda de um anexo; o card do Atrio espera também os campos de foto do Ideario (aqui vazios). */
@@ -196,7 +201,9 @@ export const attachments = {
   async importFile(file: Blob, name: string): Promise<Attachment> {
     if (isPreview) return (await import('./preview')).previewImport(file, name)
     const bytes = new Uint8Array(await file.arrayBuffer())
-    return await tauriInvoke<Attachment>('import_file', bytes, { headers: { 'x-name': encodeURIComponent(name) } })
+    const headers: Record<string, string> = { 'x-name': encodeURIComponent(name) }
+    if (cardWindow) headers['x-tab'] = String(cardWindow.tab)
+    return await tauriInvoke<Attachment>('import_file', bytes, { headers })
   },
 
   async importPath(path: string): Promise<Attachment> {

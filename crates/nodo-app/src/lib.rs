@@ -169,7 +169,16 @@ impl Default for Bounds {
 
 /// Flatten a laid-out map into renderer-friendly rows.
 fn snapshot(doc: &Doc) -> Snapshot {
-    let Some(ed) = doc.current() else {
+    snapshot_in(doc, None)
+}
+
+/// O mapa de uma aba (a janela de um card mostra sempre a dela) ou, sem aba, o da frente.
+fn snapshot_in(doc: &Doc, tab: Option<u64>) -> Snapshot {
+    let ed = match tab {
+        Some(id) => doc.get(id),
+        None => doc.current(),
+    };
+    let Some(ed) = ed else {
         return Snapshot {
             nodes: Vec::new(),
             connections: Vec::new(),
@@ -186,7 +195,7 @@ fn snapshot(doc: &Doc) -> Snapshot {
             bounds: Bounds::default(),
             tabs: tab_infos(doc),
             // A blank tab in front still has its id (the tab bar shows it as the one in front).
-            active: doc.active_id(),
+            active: tab.or(doc.active_id()),
         };
     };
     let map: &MindMap = ed.map();
@@ -300,7 +309,7 @@ fn snapshot(doc: &Doc) -> Snapshot {
             max_y: if max_y == f64::MIN { 0.0 } else { max_y },
         },
         tabs: tab_infos(doc),
-        active: doc.active_id(),
+        active: tab.or(doc.active_id()),
     }
 }
 
@@ -313,6 +322,16 @@ fn lock(state: &AppState) -> Result<std::sync::MutexGuard<'_, Doc>, String> {
         .map_err(|_| "estado interno corrompido; reabra o mapa".to_string())
 }
 
+/// O mapa de uma aba (`tab`: a janela de um card, presa à aba dele) ou, sem aba, o da frente.
+fn editor_in(doc: &mut Doc, tab: Option<u64>) -> Result<&mut Editor, String> {
+    match tab {
+        Some(id) => doc
+            .get_mut(id)
+            .ok_or_else(|| "o mapa deste card foi fechado".to_string()),
+        None => editor(doc),
+    }
+}
+
 fn editor(doc: &mut Doc) -> Result<&mut Editor, String> {
     doc.current_mut()
         .ok_or_else(|| "nenhum mapa aberto".to_string())
@@ -320,8 +339,8 @@ fn editor(doc: &mut Doc) -> Result<&mut Editor, String> {
 
 /// Return the current map, or an empty snapshot when nothing is open.
 #[tauri::command]
-fn get_snapshot(state: State<'_, AppState>) -> Result<Snapshot, String> {
-    Ok(snapshot(&*lock(&state)?))
+fn get_snapshot(state: State<'_, AppState>, tab: Option<u64>) -> Result<Snapshot, String> {
+    Ok(snapshot_in(&*lock(&state)?, tab))
 }
 
 /// Create a new map in a tab of its own, in front.
@@ -416,6 +435,19 @@ fn write_export(path: String, bytes: Vec<u8>) -> Result<(), String> {
 }
 
 /// Apply an edit through the editor (undo history and positioning).
+/// Uma edição no mapa de uma aba (a janela de um card) ou, sem aba, no da frente.
+fn mutate_in(
+    state: State<'_, AppState>,
+    tab: Option<u64>,
+    action: Action,
+) -> Result<Snapshot, String> {
+    let mut doc = lock(&state)?;
+    editor_in(&mut doc, tab)?
+        .apply(action)
+        .map_err(|e| e.to_string())?;
+    Ok(snapshot_in(&doc, tab))
+}
+
 fn mutate(state: State<'_, AppState>, action: Action) -> Result<Snapshot, String> {
     let mut doc = lock(&state)?;
     editor(&mut doc)?.apply(action).map_err(|e| e.to_string())?;
@@ -559,14 +591,19 @@ fn apply_edits(state: State<'_, AppState>, edits: Vec<Edit>) -> Result<Snapshot,
 
 /// Remove a node and its subtree.
 #[tauri::command]
-fn remove_node(state: State<'_, AppState>, id: u64) -> Result<Snapshot, String> {
-    mutate(state, Action::RemoveNode { id })
+fn remove_node(state: State<'_, AppState>, tab: Option<u64>, id: u64) -> Result<Snapshot, String> {
+    mutate_in(state, tab, Action::RemoveNode { id })
 }
 
 /// Replace a node's text.
 #[tauri::command]
-fn set_text(state: State<'_, AppState>, id: u64, text: String) -> Result<Snapshot, String> {
-    mutate(state, Action::SetText { id, text })
+fn set_text(
+    state: State<'_, AppState>,
+    tab: Option<u64>,
+    id: u64,
+    text: String,
+) -> Result<Snapshot, String> {
+    mutate_in(state, tab, Action::SetText { id, text })
 }
 
 /// Replace a node's note.
@@ -579,17 +616,22 @@ fn set_note(state: State<'_, AppState>, id: u64, note: String) -> Result<Snapsho
 #[tauri::command]
 fn set_card(
     state: State<'_, AppState>,
+    tab: Option<u64>,
     id: u64,
     card: nodo_core::model::CardFields,
 ) -> Result<Snapshot, String> {
-    mutate(state, Action::SetCard { id, card })
+    mutate_in(state, tab, Action::SetCard { id, card })
 }
 
 /// A node's note as the card editor's document (TipTap JSON), read with the Ideario's Markdown rules.
 #[tauri::command]
-fn note_doc(state: State<'_, AppState>, id: u64) -> Result<serde_json::Value, String> {
+fn note_doc(
+    state: State<'_, AppState>,
+    tab: Option<u64>,
+    id: u64,
+) -> Result<serde_json::Value, String> {
     let mut doc = lock(&state)?;
-    let node = editor(&mut doc)?
+    let node = editor_in(&mut doc, tab)?
         .map()
         .find(id)
         .ok_or_else(|| format!("nó {id} não encontrado"))?;
@@ -606,25 +648,30 @@ fn markdown_doc(markdown: String) -> serde_json::Value {
 #[tauri::command]
 fn set_note_doc(
     state: State<'_, AppState>,
+    tab: Option<u64>,
     id: u64,
     doc: serde_json::Value,
 ) -> Result<Snapshot, String> {
     let mut tabs = lock(&state)?;
-    let ed = editor(&mut tabs)?;
+    let ed = editor_in(&mut tabs, tab)?;
     // O nome de cada anexo vai no texto (`![praia.jpg](ideario://att/…)`), para a nota ser legível fora do app.
     let atts = ed.attachments();
     let note =
         nodo_core::atrio::markdown::to_markdown(&doc, &|h| atts.get(h).map(|a| a.name.clone()));
     ed.apply(Action::SetNote { id, note })
         .map_err(|e| e.to_string())?;
-    Ok(snapshot(&tabs))
+    Ok(snapshot_in(&tabs, tab))
 }
 
 /// A loose note's text as the card editor's document (the same rules as a topic's note).
 #[tauri::command]
-fn free_note_doc(state: State<'_, AppState>, id: u64) -> Result<serde_json::Value, String> {
+fn free_note_doc(
+    state: State<'_, AppState>,
+    tab: Option<u64>,
+    id: u64,
+) -> Result<serde_json::Value, String> {
     let mut doc = lock(&state)?;
-    let note = editor(&mut doc)?
+    let note = editor_in(&mut doc, tab)?
         .map()
         .free_note(id)
         .ok_or_else(|| format!("nota {id} não encontrada"))?;
@@ -635,30 +682,33 @@ fn free_note_doc(state: State<'_, AppState>, id: u64) -> Result<serde_json::Valu
 #[tauri::command]
 fn set_free_note_doc(
     state: State<'_, AppState>,
+    tab: Option<u64>,
     id: u64,
     doc: serde_json::Value,
 ) -> Result<Snapshot, String> {
     let mut tabs = lock(&state)?;
-    let ed = editor(&mut tabs)?;
+    let ed = editor_in(&mut tabs, tab)?;
     let atts = ed.attachments();
     let text =
         nodo_core::atrio::markdown::to_markdown(&doc, &|h| atts.get(h).map(|a| a.name.clone()));
     ed.apply(Action::SetFreeNote { id, text })
         .map_err(|e| e.to_string())?;
-    Ok(snapshot(&tabs))
+    Ok(snapshot_in(&tabs, tab))
 }
 
 /// Set a loose note's title, note colour and card fields.
 #[tauri::command]
 fn set_free_card(
     state: State<'_, AppState>,
+    tab: Option<u64>,
     id: u64,
     title: String,
     color: Option<String>,
     card: nodo_core::model::CardFields,
 ) -> Result<Snapshot, String> {
-    mutate(
+    mutate_in(
         state,
+        tab,
         Action::SetFreeCard {
             id,
             title,
@@ -709,18 +759,23 @@ fn place_free_note(
 
 /// Take a loose note off the canvas.
 #[tauri::command]
-fn remove_free_note(state: State<'_, AppState>, id: u64) -> Result<Snapshot, String> {
-    mutate(state, Action::RemoveFreeNote { id })
+fn remove_free_note(
+    state: State<'_, AppState>,
+    tab: Option<u64>,
+    id: u64,
+) -> Result<Snapshot, String> {
+    mutate_in(state, tab, Action::RemoveFreeNote { id })
 }
 
 /// Set or clear a node's branch colour.
 #[tauri::command]
 fn set_color(
     state: State<'_, AppState>,
+    tab: Option<u64>,
     id: u64,
     color: Option<String>,
 ) -> Result<Snapshot, String> {
-    mutate(state, Action::SetColor { id, color })
+    mutate_in(state, tab, Action::SetColor { id, color })
 }
 
 /// Place a branch left or right of the root.
@@ -1074,7 +1129,8 @@ pub fn run() {
         // (a native dialog here would block the main thread that runs it).
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
-                if has_unsaved(window.app_handle()) {
+                // Só a janela principal pergunta: a janela de um card fecha de vez (o card já salvou no mapa).
+                if window.label() == "main" && has_unsaved(window.app_handle()) {
                     api.prevent_close();
                     let _ = window.emit("close-requested", ());
                 }

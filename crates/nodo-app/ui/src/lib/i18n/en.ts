@@ -252,6 +252,7 @@ export const EN: Record<string, string> = {
   'Não foi possível copiar': 'Couldn’t copy',
   'Editar texto': 'Edit text',
   'Abrir card': 'Open card',
+  'Abrir em nova janela': 'Open in new window',
   'Cor do ramo': 'Branch color',
   'Sem cor': 'No color',
   Areia: 'Sand',
