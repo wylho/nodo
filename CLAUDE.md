@@ -169,6 +169,8 @@ Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `
 `docs/agents/domain.md`.
 
 ## Estado atual
+- **Atrio 0.26.6**: o título do botão H do card volta a texto ("Texto" no menu; o ✓ certo; a lista na seleção fica).
+  Mudou só no Atrio; aqui, a tag. Ainda não lançado.
 - **Versão 0.8.0 lançada** (04/11/2026, Release `v0.8.0`, pedido do usuário: "pode fazer o release dos dois apps"): prompt,
   link na palavra, card numa nova janela e card na área de transferência v2 (Atrio 0.26.3). Site e README na 0.8.0 com
   o print do card aberto (`card.webp`/`card-escuro.webp`).
