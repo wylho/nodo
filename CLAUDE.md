@@ -169,6 +169,12 @@ Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `
 `docs/agents/domain.md`.
 
 ## Estado atual
+- **Atrio 0.27.0: varredura de defeitos do editor** (pedido do usuário; registro completo no CLAUDE.md do Atrio): o
+  card do tópico não perde mais o que está na nota ao salvar (lista, código e citação em célula de tabela, marcas
+  coladas a letra ou pontuação, linha divisória e título dentro de item, quebras de linha nas pontas), desfazer "marcar
+  o pai" volta os subitens como eram, fechar com Esc espera a gravação e os arquivos. Aqui, só a tag. Notas salvas de
+  novo saem no Markdown novo (itálico junto do negrito como `_x_`, entidades só nos casos de flanco); as antigas abrem
+  como antes.
 - **Versão 0.8.1 lançada** (15/11/2026, Release `v0.8.1`, pedido do usuário: "pode fazer o release dos dois apps"): o Atrio
   0.26.6, o título do botão H do card volta a texto ("Texto" no menu; o ✓ certo; a lista na seleção fica). Mudou só no
   Atrio; aqui, a tag.
