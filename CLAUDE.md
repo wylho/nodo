@@ -169,6 +169,7 @@ Single-context: `GLOSSARY.md` na raiz (quando houver); as decisões são as do `
 `docs/agents/domain.md`.
 
 ## Estado atual
+- **Versão 0.8.2 lançada** (27/11/2026, Release `v0.8.2`, pedido do usuário: "pode fazer o release dos dois apps"): as correções do editor do Atrio 0.27.0 (abaixo).
 - **Atrio 0.27.0: varredura de defeitos do editor** (pedido do usuário; registro completo no CLAUDE.md do Atrio): o
   card do tópico não perde mais o que está na nota ao salvar (lista, código e citação em célula de tabela, marcas
   coladas a letra ou pontuação, linha divisória e título dentro de item, quebras de linha nas pontas), desfazer "marcar
